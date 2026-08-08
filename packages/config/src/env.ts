@@ -1,53 +1,50 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(__dirname, "../../../.env");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const result = dotenv.config({ path: envPath });
-if (result.error) {
-  throw result.error;
-}
+// Load the root .env file
+dotenv.config({
+  path: path.resolve(__dirname, '../../../.env'),
+});
 
-const required = [
-  "PORT",
-  "POSTGRES_HOST",
-  "POSTGRES_PORT",
-  "POSTGRES_DB",
-  "POSTGRES_USER",
-  "POSTGRES_PASSWORD",
-  "MINIO_ROOT_USER",
-  "MINIO_ROOT_PASSWORD",
-];
+// Helper to ensure env variables exist
+function required(name: string): string {
+  const value = process.env[name];
 
-for (const key of required) {
-  if (!process.env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`);
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
   }
+
+  return value;
 }
 
 export const env = {
-  port: Number(process.env.PORT ?? 3000),
+  nodeEnv: process.env.NODE_ENV || 'development',
+
+  port: Number(process.env.PORT || 3000),
+
   postgres: {
-    host: process.env.POSTGRES_HOST!,
-    port: Number(process.env.POSTGRES_PORT!),
-    database: process.env.POSTGRES_DB!,
-    user: process.env.POSTGRES_USER!,
-    password: process.env.POSTGRES_PASSWORD!,
+    host: required('POSTGRES_HOST'),
+    port: Number(required('POSTGRES_PORT')),
+    database: required('POSTGRES_DB'),
+    user: required('POSTGRES_USER'),
+    password: required('POSTGRES_PASSWORD'),
   },
+
   minio: {
-    rootUser: process.env.MINIO_ROOT_USER!,
-    rootPassword: process.env.MINIO_ROOT_PASSWORD!,
+    endpoint: required('MINIO_ENDPOINT'),
+    port: Number(required('MINIO_PORT')),
+    useSSL: process.env.MINIO_USE_SSL === 'true',
+    rootUser: required('MINIO_ROOT_USER'),
+    rootPassword: required('MINIO_ROOT_PASSWORD'),
   },
 };
 
-export function getDatabaseUrl() {
-  const url = new URL("postgres://localhost");
-  url.username = env.postgres.user;
-  url.password = env.postgres.password;
-  url.hostname = env.postgres.host;
-  url.port = String(env.postgres.port);
-  url.pathname = `/${env.postgres.database}`;
-  return url.toString();
+export function getDatabaseUrl(): string {
+  const pg = env.postgres;
+
+  return `postgres://${pg.user}:${pg.password}@${pg.host}:${pg.port}/${pg.database}`;
 }

@@ -1,8 +1,11 @@
 import express from "express";
 import { db } from "./config/database.js";
 import { sql } from "drizzle-orm";
+import storageRoutes from './routes/storage.routes.js';
 
 const app = express();
+
+app.use(express.json());
 
 app.get("/health", async (_req, res) => {
   try {
@@ -19,5 +22,7 @@ app.get("/health", async (_req, res) => {
     });
   }
 });
+
+app.use('/storage', storageRoutes);
 
 export default app;
