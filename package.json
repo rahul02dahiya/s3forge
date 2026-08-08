@@ -1,7 +1,7 @@
 {
   "name": "s3forge",
   "private": true,
-  "packageManager": "pnpm@11.0.9",
+  "packageManager": "pnpm@11.20.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
@@ -11,6 +11,9 @@
     "build": "pnpm -r --filter @s3forge/api --filter @s3forge/web build",
     "typecheck": "pnpm -r --filter @s3forge/api --filter @s3forge/web typecheck",
     "dev:api": "pnpm --filter @s3forge/api dev",
-    "dev:web": "pnpm --filter @s3forge/web dev"
+    "dev:web": "pnpm --filter @s3forge/web dev",
+    "db:generate": "pnpm --filter @s3forge/database run generate",
+    "db:migrate": "pnpm --filter @s3forge/database run migrate",
+    "db:studio": "pnpm --filter @s3forge/database run studio"
   }
 }

@@ -1,12 +1,6 @@
-import express from 'express'
+import app from "./app.js";
+import { env } from "@s3forge/config";
 
-const app = express()
-const port = Number(process.env.PORT ?? 3000)
-
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' })
-})
-
-app.listen(port, () => {
-  console.log(`API listening on port ${port}`)
+app.listen(env.port, () => {
+  console.log(`API listening on port ${env.port}`)
 })
