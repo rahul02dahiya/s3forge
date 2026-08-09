@@ -2,11 +2,6 @@
   "name": "s3forge",
   "private": true,
   "packageManager": "pnpm@11.20.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
   "scripts": {
     "build": "pnpm -r --filter @s3forge/api --filter @s3forge/web build",
     "typecheck": "pnpm -r --filter @s3forge/api --filter @s3forge/web typecheck",
