@@ -21,7 +21,7 @@ export const requestLogger = pinoHttp({
   autoLogging: {
     ignore: (req) => {
       const url = req.url ?? '';
-      return url === '/api/v1/health' || url === '/api/v1/ready';
+      return url === '/api/v1/health';
     },
   },
 
