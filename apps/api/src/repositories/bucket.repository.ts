@@ -1,6 +1,6 @@
 import { db } from '../config/database.js';
 import { buckets } from '@s3forge/database';
-import { eq, and, count, sql } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 
 export interface CreateBucketParams {
   organizationId: number;
@@ -40,6 +40,21 @@ export class BucketRepository {
       .from(buckets)
       .where(eq(buckets.minioBucketName, minioBucketName));
     return record;
+  }
+
+  /**
+   * Find all active buckets for an organization.
+   */
+  async findAllByOrganization(organizationId: number): Promise<BucketRecord[]> {
+    return db
+      .select()
+      .from(buckets)
+      .where(
+        and(
+          eq(buckets.organizationId, organizationId),
+          eq(buckets.isDeleted, false),
+        ),
+      );
   }
 
   /**
