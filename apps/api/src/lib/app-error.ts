@@ -27,6 +27,14 @@ export class AppError extends Error {
     return new AppError(message, 400, 'BAD_REQUEST', errors);
   }
 
+  static unauthorized(message: string): AppError {
+    return new AppError(message, 401, 'UNAUTHORIZED');
+  }
+
+  static forbidden(message: string): AppError {
+    return new AppError(message, 403, 'FORBIDDEN');
+  }
+
   static notFound(message: string): AppError {
     return new AppError(message, 404, 'NOT_FOUND');
   }

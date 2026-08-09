@@ -15,14 +15,14 @@ openApiRegistry.registerComponent('securitySchemes', 'bearerAuth', {
   type: 'http',
   scheme: 'bearer',
   bearerFormat: 'JWT',
-  description: 'JWT authorization header for authenticated user dashboard requests',
+  description: 'JWT authorization header for authenticated user dashboard requests (Authorization: Bearer <token>)',
 });
 
-openApiRegistry.registerComponent('securitySchemes', 'apiKeyAuth', {
+openApiRegistry.registerComponent('securitySchemes', 's3AccessKeyAuth', {
   type: 'apiKey',
   in: 'header',
-  name: 'X-API-Key',
-  description: 'API key header for programmatic access to S3Forge management APIs',
+  name: 'X-S3Forge-Access-Key',
+  description: 'S3 Access Key header for programmatic access to S3Forge management APIs',
 });
 
 /**

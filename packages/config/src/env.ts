@@ -26,6 +26,8 @@ export const env = {
 
   port: Number(process.env.PORT || 3000),
 
+  jwtSecret: process.env.JWT_SECRET || 'super-secret-default-s3forge-key-change-in-production',
+
   postgres: {
     host: required('POSTGRES_HOST'),
     port: Number(required('POSTGRES_PORT')),
