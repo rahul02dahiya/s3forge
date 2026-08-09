@@ -24,7 +24,7 @@ const router = Router();
 // Register OpenAPI Paths for Storage, Usage & Object Endpoints
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/storage/usage',
+  path: '/storage/usage',
   summary: 'Get organization-wide storage usage summary',
   tags: ['Storage Usage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -35,7 +35,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/storage/buckets',
+  path: '/storage/buckets',
   summary: 'List all storage buckets',
   tags: ['Storage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -49,7 +49,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/storage/buckets',
+  path: '/storage/buckets',
   summary: 'Create a new storage bucket',
   tags: ['Storage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -69,7 +69,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/storage/buckets/{name}',
+  path: '/storage/buckets/{name}',
   summary: 'Get details of a specific storage bucket',
   tags: ['Storage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -84,7 +84,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'delete',
-  path: '/api/v1/storage/buckets/{name}',
+  path: '/storage/buckets/{name}',
   summary: 'Soft-delete a storage bucket',
   tags: ['Storage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -99,7 +99,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/storage/buckets/{name}/usage',
+  path: '/storage/buckets/{name}/usage',
   summary: 'Get bucket storage usage and history trend',
   tags: ['Storage Usage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -115,7 +115,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/storage/buckets/{name}/usage/recalculate',
+  path: '/storage/buckets/{name}/usage/recalculate',
   summary: 'Trigger manual recalculation of bucket usage snapshot from MinIO',
   tags: ['Storage Usage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -130,7 +130,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/storage/buckets/{name}/objects/presigned-upload',
+  path: '/storage/buckets/{name}/objects/presigned-upload',
   summary: 'Generate presigned PUT URL for direct client S3 object upload',
   tags: ['Objects'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -150,7 +150,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/storage/buckets/{name}/objects/presigned-download',
+  path: '/storage/buckets/{name}/objects/presigned-download',
   summary: 'Generate presigned GET URL for temporary file download',
   tags: ['Objects'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -170,7 +170,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/storage/buckets/{name}/objects',
+  path: '/storage/buckets/{name}/objects',
   summary: 'List objects within a storage bucket',
   tags: ['Objects'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -186,7 +186,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'delete',
-  path: '/api/v1/storage/buckets/{name}/objects',
+  path: '/storage/buckets/{name}/objects',
   summary: 'Delete a single object from a storage bucket',
   tags: ['Objects'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
@@ -206,7 +206,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/storage/buckets/{name}/objects/batch-delete',
+  path: '/storage/buckets/{name}/objects/batch-delete',
   summary: 'Batch delete multiple objects from a storage bucket',
   tags: ['Objects'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],

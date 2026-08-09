@@ -34,7 +34,7 @@ export class CredentialService {
       description,
     });
 
-    logger.info({ accessKey, organizationId }, 'Generated new S3 credential keypair');
+    logger.info({ credentialId: credential.id, organizationId }, 'Generated new S3 credential keypair');
 
     // Record Audit Event
     auditService.recordAudit({
@@ -100,7 +100,7 @@ export class CredentialService {
     }
 
     logger.info(
-      { id, accessKey: updated.accessKey, isActive },
+      { id, organizationId, isActive },
       'Updated S3 credential status',
     );
 
@@ -126,7 +126,7 @@ export class CredentialService {
       throw AppError.notFound('Credential not found');
     }
 
-    logger.info({ id, accessKey: deleted.accessKey }, 'Deleted S3 credential');
+    logger.info({ id, organizationId }, 'Deleted S3 credential');
 
     // Record Audit Event
     auditService.recordAudit({

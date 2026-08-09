@@ -10,7 +10,7 @@ const router = Router();
 // Register OpenAPI Path for Audit Logs Endpoint
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/audit-logs',
+  path: '/audit-logs',
   summary: 'Get paginated audit log entries for organization',
   tags: ['Audit Logs'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],

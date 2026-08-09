@@ -10,7 +10,7 @@ const router = Router();
 // Register OpenAPI Paths for Auth Endpoints
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/auth/register',
+  path: '/auth/register',
   summary: 'Register a new user account and organization',
   tags: ['Authentication'],
   request: {
@@ -29,7 +29,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/auth/login',
+  path: '/auth/login',
   summary: 'Authenticate user credentials and receive JWT access token',
   tags: ['Authentication'],
   request: {
@@ -47,10 +47,10 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/auth/me',
+  path: '/auth/me',
   summary: 'Get details of currently authenticated user and organization',
   tags: ['Authentication'],
-  security: [{ BearerAuth: [] }],
+  security: [{ bearerAuth: [] }],
   responses: {
     200: { description: 'User profile retrieved successfully' },
     401: { description: 'Unauthorized' },

@@ -4,7 +4,7 @@ import { logger } from '../lib/logger.js';
 /**
  * HTTP request/response logging middleware using pino-http.
  * Logs every request with method, url, status, and response time.
- * Attaches a child logger to req.log with the request's correlation ID.
+ * Attaches a compact child logger to req.log with the request's correlation ID.
  */
 export const requestLogger = pinoHttp({
   logger,
@@ -16,6 +16,16 @@ export const requestLogger = pinoHttp({
   customProps: (req) => ({
     requestId: (req as Express.Request).id,
   }),
+
+  serializers: {
+    req: (req) => ({
+      method: req.method,
+      url: req.url,
+    }),
+    res: (res) => ({
+      statusCode: res.statusCode,
+    }),
+  },
 
   // Don't log health check endpoints to avoid noise
   autoLogging: {
@@ -38,11 +48,11 @@ export const requestLogger = pinoHttp({
 
   // Customize the success message
   customSuccessMessage: (req, res) => {
-    return `${req.method} ${req.url} completed with ${res.statusCode}`;
+    return 'HTTP request completed';
   },
 
   // Customize the error message
   customErrorMessage: (req, _res, error) => {
-    return `${req.method} ${req.url} errored: ${error.message}`;
+    return `HTTP request errored: ${error.message}`;
   },
 });

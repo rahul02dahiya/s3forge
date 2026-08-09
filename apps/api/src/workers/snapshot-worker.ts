@@ -71,7 +71,7 @@ export class SnapshotWorker {
         .from(buckets)
         .where(eq(buckets.isDeleted, false));
 
-      logger.info({ count: activeBuckets.length }, 'Beginning periodic storage usage snapshot pass');
+      logger.debug({ count: activeBuckets.length }, 'Beginning periodic storage usage snapshot pass');
 
       let successCount = 0;
       let failureCount = 0;

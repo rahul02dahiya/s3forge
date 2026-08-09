@@ -34,7 +34,7 @@ export class AuditService {
         metadata: params.metadata,
       });
 
-      logger.info(
+      logger.debug(
         { action: params.action, resourceType: params.resourceType, organizationId: orgId },
         'Recorded audit log event',
       );

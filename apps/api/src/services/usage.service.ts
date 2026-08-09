@@ -35,7 +35,7 @@ export class UsageService {
       totalBytes,
     });
 
-    logger.info(
+    logger.debug(
       { bucketName, objectCount, totalBytes },
       'Recalculating bucket storage usage snapshot complete',
     );

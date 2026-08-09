@@ -13,7 +13,7 @@ const router = Router();
 // Register OpenAPI Paths for Credential Endpoints
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/credentials',
+  path: '/credentials',
   summary: 'List all S3 credentials for organization',
   tags: ['Credentials'],
   request: {
@@ -26,7 +26,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'post',
-  path: '/api/v1/credentials',
+  path: '/credentials',
   summary: 'Create a new S3 access credential keypair',
   tags: ['Credentials'],
   request: {
@@ -44,7 +44,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'get',
-  path: '/api/v1/credentials/{id}',
+  path: '/credentials/{id}',
   summary: 'Get S3 credential details by ID',
   tags: ['Credentials'],
   request: {
@@ -58,7 +58,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'patch',
-  path: '/api/v1/credentials/{id}/revoke',
+  path: '/credentials/{id}/revoke',
   summary: 'Revoke (deactivate) an S3 credential keypair',
   tags: ['Credentials'],
   request: {
@@ -72,7 +72,7 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
   method: 'delete',
-  path: '/api/v1/credentials/{id}',
+  path: '/credentials/{id}',
   summary: 'Delete an S3 credential keypair',
   tags: ['Credentials'],
   request: {

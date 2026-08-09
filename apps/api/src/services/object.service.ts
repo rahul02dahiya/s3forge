@@ -31,7 +31,7 @@ export class ObjectService {
       expirySeconds,
     );
 
-    logger.info(
+    logger.debug(
       { bucketName, objectName: input.objectName, expirySeconds },
       'Generated presigned upload URL',
     );
@@ -75,7 +75,7 @@ export class ObjectService {
       expirySeconds,
     );
 
-    logger.info(
+    logger.debug(
       { bucketName, objectName: input.objectName, expirySeconds },
       'Generated presigned download URL',
     );
