@@ -2,7 +2,7 @@
 
 > **Branch:** `feat/backend-foundation`  
 > **Last Updated:** 2026-08-09  
-> **Status:** Phase 1 Foundation, Phase 2 Storage Core, Phase 3 S3 Credentials, Phase 4.1 Auth, and Phase 4.2 Usage Snapshots completed!
+> **Status:** All Phase 1, Phase 2, Phase 3, and Phase 4 backend foundation tasks completed!
 
 ---
 
@@ -106,6 +106,13 @@
     - `apps/api/src/services/usage.service.ts`: MinIO object stream scanner for calculating object count and total byte size per bucket and organization-wide.
     - `apps/api/src/controllers/usage.controller.ts` & `apps/api/src/routes/storage.routes.ts`: Mounted `GET /storage/usage`, `GET /storage/buckets/:name/usage`, `POST /storage/buckets/:name/usage/recalculate`.
 
+24. **Audit Logging System & Recorder Infrastructure (Phase 4.3)** (`41b21b6`)
+    - `packages/database/src/schema/audit-logs.ts`: Drizzle ORM schema for `audit_logs` table.
+    - `apps/api/src/repositories/audit-log.repository.ts`: Drizzle repository for event persistence and querying.
+    - `apps/api/src/services/audit.service.ts`: Non-blocking asynchronous event recorder.
+    - Instrumented `AuthService`, `StorageService`, and `CredentialService` to record events automatically (`user.register`, `user.login`, `bucket.create`, `bucket.delete`, `credential.create`, `credential.revoke`).
+    - `apps/api/src/controllers/audit.controller.ts` & `apps/api/src/routes/audit.routes.ts`: Mounted `GET /api/v1/audit-logs` endpoint with OpenAPI documentation.
+
 ---
 
 ## 3. Pending & Active Backlog Tasks
@@ -113,7 +120,7 @@
 ### Phase 4 — Multi-Tenant Features & Observability
 - [x] **Task 4.1:** Authentication system & API key verification middleware.
 - [x] **Task 4.2:** Usage Snapshots & Metrics API.
-- [ ] **Task 4.3:** Audit log table & middleware recorder.
+- [x] **Task 4.3:** Audit log table & middleware recorder.
 
 ---
 
