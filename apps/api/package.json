@@ -17,6 +17,7 @@
   "author": "Rahul Dahiya",
   "license": "UNLICENSED",
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
     "@s3forge/config": "workspace:*",
     "@s3forge/database": "workspace:*",
     "cors": "^2.8.5",
@@ -28,12 +29,14 @@
     "pino": "^9.7.0",
     "pino-http": "^10.6.0",
     "postgres": "^3.4.9",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^22.17.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   }
