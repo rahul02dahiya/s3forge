@@ -2,7 +2,7 @@
 
 > **Branch:** `feat/backend-foundation`  
 > **Last Updated:** 2026-08-09  
-> **Status:** Phase 1 Foundation, Phase 2 Storage Core, Phase 3 S3 Credentials, and Phase 4.1 Auth System completed!
+> **Status:** Phase 1 Foundation, Phase 2 Storage Core, Phase 3 S3 Credentials, Phase 4.1 Auth, and Phase 4.2 Usage Snapshots completed!
 
 ---
 
@@ -101,13 +101,18 @@
     - `apps/api/src/middleware/authenticate.ts`: Middleware supporting Bearer JWTs and `X-S3Forge-Access-Key` headers.
     - `apps/api/src/routes/auth.routes.ts`: `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`.
 
+23. **Storage Usage Snapshots & Metrics (Phase 4.2)** (`7357240`)
+    - `apps/api/src/repositories/usage-snapshot.repository.ts`: Drizzle repository for `usage_snapshots` table.
+    - `apps/api/src/services/usage.service.ts`: MinIO object stream scanner for calculating object count and total byte size per bucket and organization-wide.
+    - `apps/api/src/controllers/usage.controller.ts` & `apps/api/src/routes/storage.routes.ts`: Mounted `GET /storage/usage`, `GET /storage/buckets/:name/usage`, `POST /storage/buckets/:name/usage/recalculate`.
+
 ---
 
 ## 3. Pending & Active Backlog Tasks
 
 ### Phase 4 — Multi-Tenant Features & Observability
 - [x] **Task 4.1:** Authentication system & API key verification middleware.
-- [ ] **Task 4.2:** Usage Snapshots cron background worker (`usage_snapshots` table).
+- [x] **Task 4.2:** Usage Snapshots & Metrics API.
 - [ ] **Task 4.3:** Audit log table & middleware recorder.
 
 ---
