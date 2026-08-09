@@ -2,7 +2,7 @@
 
 > **Branch:** `feat/backend-foundation`  
 > **Last Updated:** 2026-08-09  
-> **Status:** Phase 1 Foundation, Phase 2 Storage Core, and Phase 3 S3 Access Credentials Management completed!
+> **Status:** Phase 1 Foundation, Phase 2 Storage Core, Phase 3 S3 Credentials, and Phase 4.1 Auth System completed!
 
 ---
 
@@ -94,12 +94,19 @@
     - `apps/api/src/services/credential.service.ts`: Business logic returning secret key **only once** upon initial generation.
     - `apps/api/src/controllers/credential.controller.ts` & `apps/api/src/routes/credential.routes.ts`: Mounted `/api/v1/credentials` (POST create, GET list, GET :id, PATCH :id/revoke, DELETE :id).
 
+22. **Authentication System & OpenAPI Integration (Phase 4.1)** (`28e845b`)
+    - `apps/api/src/lib/password.ts`: scrypt password hashing & verification.
+    - `apps/api/src/lib/jwt.ts`: HMAC-SHA256 JWT token signing & verification.
+    - `apps/api/src/repositories/user.repository.ts`: User & organization transactional setup.
+    - `apps/api/src/middleware/authenticate.ts`: Middleware supporting Bearer JWTs and `X-S3Forge-Access-Key` headers.
+    - `apps/api/src/routes/auth.routes.ts`: `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`.
+
 ---
 
 ## 3. Pending & Active Backlog Tasks
 
 ### Phase 4 — Multi-Tenant Features & Observability
-- [ ] **Task 4.1:** Authentication system (JWT in httpOnly cookies + API key verification middleware).
+- [x] **Task 4.1:** Authentication system & API key verification middleware.
 - [ ] **Task 4.2:** Usage Snapshots cron background worker (`usage_snapshots` table).
 - [ ] **Task 4.3:** Audit log table & middleware recorder.
 
