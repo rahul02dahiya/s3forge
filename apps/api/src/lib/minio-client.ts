@@ -87,4 +87,30 @@ export const minioService = {
   async listBuckets(): Promise<Array<{ name: string; creationDate: Date }>> {
     return withMinioRetry('listBuckets', () => minio.listBuckets());
   },
+
+  async presignedPutObject(bucketName: string, objectName: string, expirySeconds: number = 3600): Promise<string> {
+    return withMinioRetry('presignedPutObject', () => minio.presignedPutObject(bucketName, objectName, expirySeconds));
+  },
+
+  async presignedGetObject(bucketName: string, objectName: string, expirySeconds: number = 3600): Promise<string> {
+    return withMinioRetry('presignedGetObject', () => minio.presignedGetObject(bucketName, objectName, expirySeconds));
+  },
+
+  async statObject(bucketName: string, objectName: string) {
+    return withMinioRetry('statObject', () => minio.statObject(bucketName, objectName));
+  },
+
+  async getObject(bucketName: string, objectName: string) {
+    return withMinioRetry('getObject', () => minio.getObject(bucketName, objectName));
+  },
+
+  async removeObject(bucketName: string, objectName: string): Promise<void> {
+    return withMinioRetry('removeObject', () => minio.removeObject(bucketName, objectName));
+  },
+
+  async removeObjects(bucketName: string, objectNames: string[]): Promise<void> {
+    return withMinioRetry('removeObjects', async () => {
+      await minio.removeObjects(bucketName, objectNames);
+    });
+  },
 };

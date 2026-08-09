@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { storageController } from '../controllers/storage.controller.js';
 import { usageController } from '../controllers/usage.controller.js';
+import { objectController } from '../controllers/object.controller.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
 import {
@@ -9,11 +10,18 @@ import {
   ListBucketsQuerySchema,
 } from '../validators/storage.validators.js';
 import { UsageHistoryQuerySchema } from '../validators/usage.validators.js';
+import {
+  PresignedUploadSchema,
+  PresignedDownloadSchema,
+  ListObjectsQuerySchema,
+  DeleteObjectSchema,
+  BatchDeleteObjectsSchema,
+} from '../validators/object.validators.js';
 import { openApiRegistry } from '../config/swagger.js';
 
 const router = Router();
 
-// Register OpenAPI Paths for Storage & Usage Endpoints
+// Register OpenAPI Paths for Storage, Usage & Object Endpoints
 openApiRegistry.registerPath({
   method: 'get',
   path: '/api/v1/storage/usage',
@@ -120,6 +128,102 @@ openApiRegistry.registerPath({
   },
 });
 
+openApiRegistry.registerPath({
+  method: 'post',
+  path: '/api/v1/storage/buckets/{name}/objects/presigned-upload',
+  summary: 'Generate presigned PUT URL for direct client S3 object upload',
+  tags: ['Objects'],
+  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  request: {
+    params: BucketNameParamSchema,
+    body: {
+      content: {
+        'application/json': { schema: PresignedUploadSchema },
+      },
+    },
+  },
+  responses: {
+    200: { description: 'Presigned upload URL generated successfully' },
+    404: { description: 'Bucket not found' },
+  },
+});
+
+openApiRegistry.registerPath({
+  method: 'post',
+  path: '/api/v1/storage/buckets/{name}/objects/presigned-download',
+  summary: 'Generate presigned GET URL for temporary file download',
+  tags: ['Objects'],
+  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  request: {
+    params: BucketNameParamSchema,
+    body: {
+      content: {
+        'application/json': { schema: PresignedDownloadSchema },
+      },
+    },
+  },
+  responses: {
+    200: { description: 'Presigned download URL generated successfully' },
+    404: { description: 'Bucket not found' },
+  },
+});
+
+openApiRegistry.registerPath({
+  method: 'get',
+  path: '/api/v1/storage/buckets/{name}/objects',
+  summary: 'List objects within a storage bucket',
+  tags: ['Objects'],
+  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  request: {
+    params: BucketNameParamSchema,
+    query: ListObjectsQuerySchema,
+  },
+  responses: {
+    200: { description: 'List of bucket objects' },
+    404: { description: 'Bucket not found' },
+  },
+});
+
+openApiRegistry.registerPath({
+  method: 'delete',
+  path: '/api/v1/storage/buckets/{name}/objects',
+  summary: 'Delete a single object from a storage bucket',
+  tags: ['Objects'],
+  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  request: {
+    params: BucketNameParamSchema,
+    body: {
+      content: {
+        'application/json': { schema: DeleteObjectSchema },
+      },
+    },
+  },
+  responses: {
+    200: { description: 'Object deleted successfully' },
+    404: { description: 'Bucket or object not found' },
+  },
+});
+
+openApiRegistry.registerPath({
+  method: 'post',
+  path: '/api/v1/storage/buckets/{name}/objects/batch-delete',
+  summary: 'Batch delete multiple objects from a storage bucket',
+  tags: ['Objects'],
+  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  request: {
+    params: BucketNameParamSchema,
+    body: {
+      content: {
+        'application/json': { schema: BatchDeleteObjectsSchema },
+      },
+    },
+  },
+  responses: {
+    200: { description: 'Batch objects deleted successfully' },
+    404: { description: 'Bucket not found' },
+  },
+});
+
 // Route Definitions
 router.get(
   '/usage',
@@ -167,6 +271,49 @@ router.post(
   authenticate({ optional: true }),
   validate({ params: BucketNameParamSchema }),
   (req, res, next) => usageController.recalculateBucketUsage(req, res).catch(next),
+);
+
+// Object Routes
+router.post(
+  '/buckets/:name/objects/presigned-upload',
+  authenticate({ optional: true }),
+  validate({ params: BucketNameParamSchema, body: PresignedUploadSchema }),
+  (req, res, next) => objectController.generatePresignedUpload(req, res).catch(next),
+);
+
+router.post(
+  '/buckets/:name/objects/presigned-download',
+  authenticate({ optional: true }),
+  validate({ params: BucketNameParamSchema, body: PresignedDownloadSchema }),
+  (req, res, next) => objectController.generatePresignedDownload(req, res).catch(next),
+);
+
+router.get(
+  '/buckets/:name/objects',
+  authenticate({ optional: true }),
+  validate({ params: BucketNameParamSchema, query: ListObjectsQuerySchema }),
+  (req, res, next) => objectController.listObjects(req, res).catch(next),
+);
+
+router.get(
+  '/buckets/:name/objects/stat',
+  authenticate({ optional: true }),
+  validate({ params: BucketNameParamSchema }),
+  (req, res, next) => objectController.getObjectMetadata(req, res).catch(next),
+);
+
+router.delete(
+  '/buckets/:name/objects',
+  authenticate({ optional: true }),
+  validate({ params: BucketNameParamSchema, body: DeleteObjectSchema }),
+  (req, res, next) => objectController.deleteObject(req, res).catch(next),
+);
+
+router.post(
+  '/buckets/:name/objects/batch-delete',
+  authenticate({ optional: true }),
+  validate({ params: BucketNameParamSchema, body: BatchDeleteObjectsSchema }),
+  (req, res, next) => objectController.batchDeleteObjects(req, res).catch(next),
 );
 
 export default router;
