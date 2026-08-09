@@ -2,7 +2,7 @@
 
 > **Branch:** `feat/backend-foundation`  
 > **Last Updated:** 2026-08-09  
-> **Status:** Phase 1 Foundation active, preparing Swagger + Storage Core
+> **Status:** Phase 1 Foundation & Phase 2 Storage Core completed!
 
 ---
 
@@ -43,36 +43,52 @@
 6. **Environment Security** (`9489f12`)
    - `.env.example`: Replaced plaintext passwords with secure placeholder strings.
 
+7. **Backlog & Agent Handoff Infrastructure** (`fe38cf0`)
+   - `backlog/STATUS.md`: Tracking progress and technical decisions.
+
+8. **Swagger UI & OpenAPI 3.1 Specification** (`056a2bb`)
+   - `apps/api/src/config/swagger.ts`: `zod-to-openapi` registry with JWT and API Key security schemes.
+   - `apps/api/src/routes/docs.routes.ts`: Interactive Swagger UI at `/api/v1/docs` and raw specification at `/api/v1/openapi.json`.
+
+9. **TypeScript Compiler Hardening** (`ce3c2b6`)
+   - `apps/api/tsconfig.json`: Added path aliases for `@s3forge/config` and `@s3forge/database`, enabled `noExplicitAny`.
+
+10. **Resilient MinIO Client Wrapper** (`e598739`)
+    - `apps/api/src/lib/minio-client.ts`: Exponential backoff with random jitter, transient network error detection, wrapped SDK methods.
+
+11. **Storage Zod Validators** (`fccb0de`)
+    - `apps/api/src/validators/storage.validators.ts`: Zod schemas for `CreateBucketSchema`, `BucketNameParamSchema`, and `ListBucketsQuerySchema` with OpenAPI metadata.
+
+12. **Bucket Repository Layer** (`f80bb9c`)
+    - `apps/api/src/repositories/bucket.repository.ts`: Drizzle ORM operations on `buckets` table with soft delete and org filtering.
+
+13. **Storage Service Layer** (`ecfc6db`)
+    - `apps/api/src/services/storage.service.ts`: Business logic for bucket CRUD, org-prefixing (`org1-{name}`), and compensation rollback logic.
+
+14. **Storage Controller Layer** (`5df57e7`)
+    - `apps/api/src/controllers/storage.controller.ts`: Thin HTTP orchestration delegating to `storageService`.
+
+15. **Storage Routes Refactoring & OpenAPI Paths** (`42de038`)
+    - `apps/api/src/routes/storage.routes.ts`: Fully refactored router using Zod validation middleware and registered with `openApiRegistry`.
+
 ---
 
 ## 3. Pending & Active Backlog Tasks
 
-### Phase 1 Remaining — OpenAPI & Documentation
-- [ ] **Task 1.1:** Add Swagger / OpenAPI integration using `@asteasolutions/zod-to-openapi` and `swagger-ui-express` (`config/swagger.ts`). Mount `/api/v1/docs` and `/api/v1/openapi.json`.
-- [ ] **Task 1.2:** Add tsconfig paths alias or build config for `@s3forge/*` packages in `apps/api/tsconfig.json` to ensure clean compilation.
-
-### Phase 2 — Storage Core (Refactoring & Clean Layering)
-- [ ] **Task 2.1:** Resilient MinIO Client Wrapper (`lib/minio-client.ts`) with retry logic & timeouts for network errors.
-- [ ] **Task 2.2:** Zod Schemas for Storage endpoints (`validators/storage.validators.ts`) — bucket creation, name params, pagination query.
-- [ ] **Task 2.3:** Bucket Repository (`repositories/bucket.repository.ts`) — Drizzle ORM operations (`buckets` table), filtering `is_deleted = false`.
-- [ ] **Task 2.4:** Storage Service (`services/storage.service.ts`) — Business logic for bucket CRUD, organization scoping, MinIO bucket naming sync.
-- [ ] **Task 2.5:** Storage Controller (`controllers/storage.controller.ts`) — Extract validated inputs, invoke service, return response envelope.
-- [ ] **Task 2.6:** Storage Routes (`routes/storage.routes.ts`) — Refactor routes to use Zod `validate()` middleware and new storage controller. Register endpoints with OpenAPI registry.
-
-### Phase 3 — S3 Access Credentials
+### Phase 3 — S3 Access Credentials Management
 - [ ] **Task 3.1:** MinIO Admin Client wrapper for service account / policy management.
 - [ ] **Task 3.2:** S3 Credential Repository & Service (`s3_credentials` table).
 - [ ] **Task 3.3:** Credential Generation & Revocation Controller/Routes (`/api/v1/credentials`).
 
 ### Phase 4 — Multi-Tenant Features & Observability
 - [ ] **Task 4.1:** Authentication system (JWT in httpOnly cookies + API key verification middleware).
-- [ ] **Task 4.2:** Usage Snapshots cron background worker.
+- [ ] **Task 4.2:** Usage Snapshots cron background worker (`usage_snapshots` table).
 - [ ] **Task 4.3:** Audit log table & middleware recorder.
 
 ---
 
 ## 4. Guidelines for Handoff Agents
-1. **Spiral SDLC:** Complete 1 feature at a time. Make clean, descriptive git commits per feature (e.g. `feat(api): ...` or `refactor(storage): ...`).
+1. **Spiral SDLC:** Complete 1 feature at a time. Make clean, descriptive git commits per feature.
 2. **Strict ESM rules:** TypeScript file imports must include `.js` extension (e.g., `import { logger } from '../lib/logger.js'`).
 3. **Validation & Errors:** Every new endpoint must use Zod schemas via `validate()` middleware and throw `AppError` for domain errors.
 4. **Never bypass layers:** Routes -> Middleware/Validator -> Controller -> Service -> Repository / MinIO Client.
