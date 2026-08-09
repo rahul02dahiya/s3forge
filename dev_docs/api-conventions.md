@@ -7,7 +7,7 @@ This document describes the API design conventions, response envelopes, validati
 ## API Base Path & Versioning
 
 - **Base URL**: `/api/v1`
-- **Versioning Rule**: All endpoints are mounted under versioned path prefixes (`/api/v1/auth`, `/api/v1/storage`, `/api/v1/credentials`). Breaking changes to request parameters or response envelopes require incrementing the URL version segment (e.g. `/api/v2`).
+- **Versioning Rule**: All endpoints are mounted under versioned path prefixes (`/api/v1/auth`, `/api/v1/storage`, `/api/v1/credentials`, `/api/v1/audit-logs`). Breaking changes to request parameters or response envelopes require incrementing the URL version segment (e.g. `/api/v2`).
 
 ---
 
@@ -56,11 +56,17 @@ Interactive API documentation and schema exploration are hosted live by the API 
 - `PATCH /api/v1/credentials/:id/revoke`: Deactivate (revoke) a credential keypair.
 - `DELETE /api/v1/credentials/:id`: Delete a credential keypair.
 
-#### Storage Bucket Operations (`/api/v1/storage`)
+#### Storage & Usage Operations (`/api/v1/storage`)
+- `GET /api/v1/storage/usage`: Aggregate storage byte totals and object counts for organization.
 - `POST /api/v1/storage/buckets`: Create a new storage bucket (org-prefixed inside MinIO engine).
 - `GET /api/v1/storage/buckets`: List organization buckets.
 - `GET /api/v1/storage/buckets/:name`: Get bucket details.
 - `DELETE /api/v1/storage/buckets/:name`: Soft-delete a storage bucket (`is_deleted = true`).
+- `GET /api/v1/storage/buckets/:name/usage`: Get bucket usage metrics & historical trend.
+- `POST /api/v1/storage/buckets/:name/usage/recalculate`: Recalculate usage snapshot from MinIO storage engine.
+
+#### Audit Logging (`/api/v1/audit-logs`)
+- `GET /api/v1/audit-logs`: Get paginated audit trail of organization state changes (`action`, `user_id`, `ip_address`, `resource_type`).
 
 ---
 

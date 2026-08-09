@@ -1,6 +1,7 @@
 import { userRepository } from '../repositories/user.repository.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
 import { signJwt } from '../lib/jwt.js';
+import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
 import type { RegisterInput, LoginInput } from '../validators/auth.validators.js';
@@ -32,6 +33,16 @@ export class AuthService {
     });
 
     logger.info({ userId: user.id, organizationId: organization.id }, 'Registered new user');
+
+    // Record Audit Event
+    auditService.recordAudit({
+      organizationId: organization.id,
+      userId: user.id,
+      action: 'user.register',
+      resourceType: 'user',
+      resourceId: String(user.id),
+      metadata: { email: user.email, displayName: user.displayName },
+    }).catch(() => {});
 
     return {
       user: {
@@ -73,6 +84,16 @@ export class AuthService {
     });
 
     logger.info({ userId: user.id, organizationId }, 'User logged in successfully');
+
+    // Record Audit Event
+    auditService.recordAudit({
+      organizationId,
+      userId: user.id,
+      action: 'user.login',
+      resourceType: 'user',
+      resourceId: String(user.id),
+      metadata: { email: user.email },
+    }).catch(() => {});
 
     return {
       user: {

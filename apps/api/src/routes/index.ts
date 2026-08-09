@@ -4,6 +4,7 @@ import { docsRoutes } from './docs.routes.js';
 import authRoutes from './auth.routes.js';
 import storageRoutes from './storage.routes.js';
 import credentialRoutes from './credential.routes.js';
+import auditRoutes from './audit.routes.js';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use('/', docsRoutes);
 router.use('/auth', authRoutes);
 router.use('/storage', storageRoutes);
 router.use('/credentials', credentialRoutes);
+router.use('/audit-logs', auditRoutes);
 
 export { router as apiRouter };

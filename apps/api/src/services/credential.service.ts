@@ -1,5 +1,6 @@
 import { s3CredentialRepository } from '../repositories/s3-credential.repository.js';
 import { generateAccessKey, generateSecretKey, hashSecretKey } from '../lib/credential-generator.js';
+import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
 
@@ -34,6 +35,15 @@ export class CredentialService {
     });
 
     logger.info({ accessKey, organizationId }, 'Generated new S3 credential keypair');
+
+    // Record Audit Event
+    auditService.recordAudit({
+      organizationId,
+      action: 'credential.create',
+      resourceType: 'credential',
+      resourceId: String(credential.id),
+      metadata: { accessKey: credential.accessKey, description },
+    }).catch(() => {});
 
     return {
       id: credential.id,
@@ -94,6 +104,15 @@ export class CredentialService {
       'Updated S3 credential status',
     );
 
+    // Record Audit Event
+    auditService.recordAudit({
+      organizationId,
+      action: isActive ? 'credential.enable' : 'credential.revoke',
+      resourceType: 'credential',
+      resourceId: String(updated.id),
+      metadata: { accessKey: updated.accessKey, isActive },
+    }).catch(() => {});
+
     const { secretKeyHash, ...safeCredential } = updated;
     return safeCredential;
   }
@@ -108,6 +127,16 @@ export class CredentialService {
     }
 
     logger.info({ id, accessKey: deleted.accessKey }, 'Deleted S3 credential');
+
+    // Record Audit Event
+    auditService.recordAudit({
+      organizationId,
+      action: 'credential.delete',
+      resourceType: 'credential',
+      resourceId: String(deleted.id),
+      metadata: { accessKey: deleted.accessKey },
+    }).catch(() => {});
+
     return true;
   }
 }

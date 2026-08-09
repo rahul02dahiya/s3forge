@@ -1,10 +1,10 @@
 import { bucketRepository, type BucketRecord } from '../repositories/bucket.repository.js';
 import { minioService } from '../lib/minio-client.js';
+import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
 import type { CreateBucketInput } from '../validators/storage.validators.js';
 
-// Default organization ID for early phases before full multi-tenant auth is active
 const DEFAULT_ORGANIZATION_ID = 1;
 const DEFAULT_ORG_PREFIX = 'org1';
 
@@ -19,11 +19,11 @@ export class StorageService {
   /**
    * Create a new bucket both in MinIO storage and PostgreSQL metadata.
    */
-  async createBucket(input: CreateBucketInput): Promise<BucketRecord> {
+  async createBucket(input: CreateBucketInput, organizationId: number = DEFAULT_ORGANIZATION_ID): Promise<BucketRecord> {
     const { name, region = 'us-east-1', visibility = 'private', quotaBytes = 0 } = input;
 
     // 1. Check if active bucket record exists in PostgreSQL
-    const existingDbRecord = await bucketRepository.findByName(DEFAULT_ORGANIZATION_ID, name);
+    const existingDbRecord = await bucketRepository.findByName(organizationId, name);
     if (existingDbRecord) {
       throw AppError.conflict(`Bucket with name '${name}' already exists`);
     }
@@ -42,7 +42,7 @@ export class StorageService {
     // 4. Persist metadata in PostgreSQL with compensation rollback on DB failure
     try {
       const createdRecord = await bucketRepository.create({
-        organizationId: DEFAULT_ORGANIZATION_ID,
+        organizationId,
         name,
         minioBucketName,
         region,
@@ -54,6 +54,15 @@ export class StorageService {
         { bucketId: createdRecord.id, name, minioBucketName, region },
         `Successfully created bucket '${name}'`,
       );
+
+      // Record Audit Event
+      auditService.recordAudit({
+        organizationId,
+        action: 'bucket.create',
+        resourceType: 'bucket',
+        resourceId: String(createdRecord.id),
+        metadata: { name, minioBucketName, region, visibility },
+      }).catch(() => {});
 
       return createdRecord;
     } catch (dbError) {
@@ -80,11 +89,12 @@ export class StorageService {
   async listBuckets(
     page: number = 1,
     limit: number = 20,
+    organizationId: number = DEFAULT_ORGANIZATION_ID,
   ): Promise<{ data: BucketRecord[]; meta: { page: number; limit: number; total: number } }> {
     const offset = (page - 1) * limit;
 
     const { data, total } = await bucketRepository.findPaginated(
-      DEFAULT_ORGANIZATION_ID,
+      organizationId,
       limit,
       offset,
     );
@@ -102,8 +112,8 @@ export class StorageService {
   /**
    * Retrieve single bucket by name.
    */
-  async getBucketByName(name: string): Promise<BucketRecord> {
-    const bucket = await bucketRepository.findByName(DEFAULT_ORGANIZATION_ID, name);
+  async getBucketByName(name: string, organizationId: number = DEFAULT_ORGANIZATION_ID): Promise<BucketRecord> {
+    const bucket = await bucketRepository.findByName(organizationId, name);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${name}' not found`);
     }
@@ -113,12 +123,21 @@ export class StorageService {
   /**
    * Soft-delete a bucket by user name.
    */
-  async deleteBucketByName(name: string): Promise<void> {
-    const bucket = await this.getBucketByName(name);
+  async deleteBucketByName(name: string, organizationId: number = DEFAULT_ORGANIZATION_ID): Promise<void> {
+    const bucket = await this.getBucketByName(name, organizationId);
 
     await bucketRepository.softDelete(bucket.id);
 
     logger.info({ bucketId: bucket.id, name }, `Soft-deleted bucket '${name}'`);
+
+    // Record Audit Event
+    auditService.recordAudit({
+      organizationId,
+      action: 'bucket.delete',
+      resourceType: 'bucket',
+      resourceId: String(bucket.id),
+      metadata: { name, minioBucketName: bucket.minioBucketName },
+    }).catch(() => {});
   }
 }
 
