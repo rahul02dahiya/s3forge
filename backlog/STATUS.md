@@ -2,7 +2,7 @@
 
 > **Branch:** `feat/backend-foundation`  
 > **Last Updated:** 2026-08-09  
-> **Status:** Phase 1 Foundation & Phase 2 Storage Core completed!
+> **Status:** Phase 1 Foundation, Phase 2 Storage Core, and Phase 3 S3 Access Credentials Management completed!
 
 ---
 
@@ -84,14 +84,19 @@
 19. **Health Route Refactoring** (`0516f61`)
     - Consolidated process, PostgreSQL, and MinIO checks into a single `GET /api/v1/health` endpoint and deleted `/ready` dead code.
 
+20. **Developer Documentation** (`7c6aa4f`)
+    - Created `dev_docs/getting-started.md`, `dev_docs/architecture.md`, and `dev_docs/api-conventions.md` explaining codebase structure, layers, and conventions.
+
+21. **S3 Access Credentials Management (Phase 3)** (`e248175`)
+    - `apps/api/src/lib/credential-generator.ts`: High-entropy keypair generator with timing-safe SHA-256 secret hashing.
+    - `apps/api/src/validators/credential.validators.ts`: Zod schemas registered with OpenAPI.
+    - `apps/api/src/repositories/s3-credential.repository.ts`: Drizzle ORM repository for `s3_credentials` table.
+    - `apps/api/src/services/credential.service.ts`: Business logic returning secret key **only once** upon initial generation.
+    - `apps/api/src/controllers/credential.controller.ts` & `apps/api/src/routes/credential.routes.ts`: Mounted `/api/v1/credentials` (POST create, GET list, GET :id, PATCH :id/revoke, DELETE :id).
+
 ---
 
 ## 3. Pending & Active Backlog Tasks
-
-### Phase 3 — S3 Access Credentials Management
-- [ ] **Task 3.1:** MinIO Admin Client wrapper for service account / policy management.
-- [ ] **Task 3.2:** S3 Credential Repository & Service (`s3_credentials` table).
-- [ ] **Task 3.3:** Credential Generation & Revocation Controller/Routes (`/api/v1/credentials`).
 
 ### Phase 4 — Multi-Tenant Features & Observability
 - [ ] **Task 4.1:** Authentication system (JWT in httpOnly cookies + API key verification middleware).
