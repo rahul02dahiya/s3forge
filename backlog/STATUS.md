@@ -31,8 +31,8 @@
    - `apps/api/src/middleware/validate.ts`: Generic Zod schema validation middleware for `body`, `params`, `query`.
 
 4. **Health & Readiness Endpoints** (`f92910b`)
-   - `apps/api/src/controllers/health.controller.ts`: Separated `/health` (liveness) from `/ready` (PostgreSQL + MinIO connectivity probes with timing).
-   - `apps/api/src/routes/health.routes.ts`: Routes mapped cleanly.
+   - `apps/api/src/controllers/health.controller.ts`: Consolidated `/health` endpoint checking process, PostgreSQL, and MinIO.
+   - `apps/api/src/routes/health.routes.ts`: Mapped `GET /health`.
    - `apps/api/src/routes/index.ts`: Route index mounting all routes under `/api/v1`.
 
 5. **Express App & Server Bootstrap Restructuring** (`f2f543a`)
@@ -80,6 +80,9 @@
 18. **TypeScript Monorepo Compilation Fixes** (`32bc702`)
     - `apps/api/tsconfig.json`: Fixed `noImplicitAny` compiler flag name and removed `rootDir` restriction to allow workspace package source resolution.
     - `apps/api/src/controllers/storage.controller.ts`: Type-safe string array narrowing for Express 5 params without type casting or `as any`.
+
+19. **Health Route Refactoring** (`0516f61`)
+    - Consolidated process, PostgreSQL, and MinIO checks into a single `GET /api/v1/health` endpoint and deleted `/ready` dead code.
 
 ---
 
