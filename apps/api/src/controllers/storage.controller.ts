@@ -31,7 +31,7 @@ export class StorageController {
    * GET /api/v1/storage/buckets/:name
    */
   async getBucket(req: Request, res: Response): Promise<void> {
-    const { name } = req.params;
+    const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const bucket = await storageService.getBucketByName(name);
 
     sendSuccess(res, bucket, 'Bucket retrieved successfully', 200);
@@ -41,7 +41,7 @@ export class StorageController {
    * DELETE /api/v1/storage/buckets/:name
    */
   async deleteBucket(req: Request, res: Response): Promise<void> {
-    const { name } = req.params;
+    const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     await storageService.deleteBucketByName(name);
 
     sendSuccess(res, null, 'Bucket deleted successfully', 200);
