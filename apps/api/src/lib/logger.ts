@@ -6,10 +6,17 @@ const isProduction = env.nodeEnv === 'production';
 export const logger = pino({
   level: isProduction ? 'info' : 'debug',
 
-  // Structured JSON in production, pretty-ish in dev via pino-pretty (if installed)
+  // Structured JSON in production, pretty colorized logs in development via pino-pretty
   transport: isProduction
     ? undefined
-    : { target: 'pino/file', options: { destination: 1 } },
+    : {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:standard',
+          ignore: 'pid,hostname',
+        },
+      },
 
   // Redact sensitive fields from all log output
   redact: {

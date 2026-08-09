@@ -8,10 +8,14 @@ import { constants } from './constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load the root .env file
-dotenv.config({
-  path: path.resolve(__dirname, '../../../.env'),
-});
+import fs from 'fs';
+
+// Load the .env file from process cwd (root) or relative path
+const cwdEnvPath = path.resolve(process.cwd(), '.env');
+const relativeEnvPath = path.resolve(__dirname, '../../../.env');
+const envPath = fs.existsSync(cwdEnvPath) ? cwdEnvPath : relativeEnvPath;
+
+dotenv.config({ path: envPath });
 
 // Helper to ensure env variables exist
 function required(name: string): string {
@@ -24,12 +28,17 @@ function required(name: string): string {
   return value;
 }
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
+
 export const env = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
 
   port: Number(process.env.PORT || constants.SERVER.DEFAULT_PORT),
 
-  jwtSecret: process.env.JWT_SECRET || 'super-secret-default-s3forge-key-change-in-production',
+  jwtSecret: isProduction
+    ? required('JWT_SECRET')
+    : process.env.JWT_SECRET || 'super-secret-default-s3forge-key-change-in-production',
 
   postgres: {
     host: required('POSTGRES_HOST'),
@@ -45,6 +54,8 @@ export const env = {
     useSSL: process.env.MINIO_USE_SSL === 'true',
     rootUser: required('MINIO_ROOT_USER'),
     rootPassword: required('MINIO_ROOT_PASSWORD'),
+    accessKey: process.env.MINIO_SERVICE_ACCESS_KEY || process.env.MINIO_ROOT_USER || '',
+    secretKey: process.env.MINIO_SERVICE_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || '',
   },
 };
 

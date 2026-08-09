@@ -10,7 +10,7 @@ export const requestLogger = pinoHttp({
   logger,
 
   // Use the request ID set by our requestId middleware
-  genReqId: (req) => (req as Express.Request).id,
+  genReqId: (req) => (req as Express.Request).id || (req.headers['x-request-id'] as string),
 
   // Customize what gets logged from the request
   customProps: (req) => ({
@@ -47,12 +47,12 @@ export const requestLogger = pinoHttp({
   },
 
   // Customize the success message
-  customSuccessMessage: (req, res) => {
+  customSuccessMessage: (_req, _res) => {
     return 'HTTP request completed';
   },
 
   // Customize the error message
-  customErrorMessage: (req, _res, error) => {
+  customErrorMessage: (_req, _res, error) => {
     return `HTTP request errored: ${error.message}`;
   },
 });

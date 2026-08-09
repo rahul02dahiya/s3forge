@@ -4,18 +4,14 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2023"],
-    "rootDir": "../..",
+    "rootDir": "src",
     "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"],
-    "paths": {
-      "@s3forge/config": ["../../packages/config/src/index.ts"],
-      "@s3forge/database": ["../../packages/database/src/index.ts"]
-    }
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }
