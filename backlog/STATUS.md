@@ -71,6 +71,12 @@
 15. **Storage Routes Refactoring & OpenAPI Paths** (`42de038`)
     - `apps/api/src/routes/storage.routes.ts`: Fully refactored router using Zod validation middleware and registered with `openApiRegistry`.
 
+16. **pnpm Workspace Config Update** (`85bd807`)
+    - `pnpm-workspace.yaml`: Moved `onlyBuiltDependencies` to workspace file for pnpm 11 compatibility.
+
+17. **pinoHttp ESM Import Fix** (`82a650d`)
+    - `apps/api/src/middleware/request-logger.ts`: Switched to named import `import { pinoHttp } from 'pino-http'` for TypeScript NodeNext ESM compatibility.
+
 ---
 
 ## 3. Pending & Active Backlog Tasks
