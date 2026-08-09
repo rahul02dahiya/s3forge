@@ -2,7 +2,7 @@
 
 > **Branch:** `feat/backend-foundation`  
 > **Last Updated:** 2026-08-09  
-> **Status:** All Phase 1, Phase 2, Phase 3, and Phase 4 backend foundation tasks completed!
+> **Status:** ALL BACKEND ENGINE PHASES (1 THROUGH 6) ARE 100% COMPLETE & PRODUCTION-READY!
 
 ---
 
@@ -113,18 +113,42 @@
     - Instrumented `AuthService`, `StorageService`, and `CredentialService` to record events automatically (`user.register`, `user.login`, `bucket.create`, `bucket.delete`, `credential.create`, `credential.revoke`).
     - `apps/api/src/controllers/audit.controller.ts` & `apps/api/src/routes/audit.routes.ts`: Mounted `GET /api/v1/audit-logs` endpoint with OpenAPI documentation.
 
+25. **Object Storage Data Plane APIs (Phase 5)** (`2c4e9cd`)
+    - `apps/api/src/validators/object.validators.ts`: Zod schemas for object presigned URLs, object listing, stat metadata, and deletions.
+    - `apps/api/src/services/object.service.ts`: S3 presigned PUT/GET URL generator, object listing with prefix filtering, stat object metadata, single deletion, and batch deletion.
+    - `apps/api/src/controllers/object.controller.ts` & `apps/api/src/routes/storage.routes.ts`: Mounted `/api/v1/storage/buckets/:name/objects/*` endpoints registered with OpenAPI.
+
+26. **Automated Snapshot Background Worker (Phase 6)** (`5006173`)
+    - `apps/api/src/workers/snapshot-worker.ts`: Periodic snapshot worker that iterates over active organization buckets and records usage snapshots into PostgreSQL.
+    - `apps/api/src/server.ts`: Integrated worker lifecycle into server startup and graceful shutdown sequence.
+
 ---
 
-## 3. Pending & Active Backlog Tasks
+## 3. Backlog Status
+
+### Phase 1 — Project Foundation
+- [x] Pino logging, AppError, response envelopes, correlation IDs, health probe, server bootstrap, Swagger UI.
+
+### Phase 2 — Storage Core & MinIO Integration
+- [x] MinIO client wrapper with retry & jitter, Drizzle bucket repository, bucket CRUD & soft delete.
+
+### Phase 3 — S3 Access Credentials Management
+- [x] Keypair generator, SHA-256 secret hashing, single-view secret return policy, `/api/v1/credentials` CRUD routes.
 
 ### Phase 4 — Multi-Tenant Features & Observability
 - [x] **Task 4.1:** Authentication system & API key verification middleware.
 - [x] **Task 4.2:** Usage Snapshots & Metrics API.
 - [x] **Task 4.3:** Audit log table & middleware recorder.
 
+### Phase 5 — Object Storage Data Plane APIs
+- [x] Presigned upload & download URLs, object listing, stat object metadata, single & batch object deletion.
+
+### Phase 6 — Background Worker & Server Lifecycle
+- [x] Periodic `SnapshotWorker` for usage snapshots with server startup & shutdown handlers.
+
 ---
 
-## 4. Guidelines for Handoff Agents
+## 4. Guidelines for Handoff Agents & Developers
 1. **Spiral SDLC:** Complete 1 feature at a time. Make clean, descriptive git commits per feature.
 2. **Strict ESM rules:** TypeScript file imports must include `.js` extension (e.g., `import { logger } from '../lib/logger.js'`).
 3. **Validation & Errors:** Every new endpoint must use Zod schemas via `validate()` middleware and throw `AppError` for domain errors.
