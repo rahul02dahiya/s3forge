@@ -7,10 +7,16 @@
     "rootDir": "src",
     "outDir": "dist",
     "strict": true,
+    "noExplicitAny": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@s3forge/config": ["../../packages/config/src/index.ts"],
+      "@s3forge/database": ["../../packages/database/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts"]
 }
