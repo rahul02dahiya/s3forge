@@ -51,7 +51,7 @@
    - `apps/api/src/routes/docs.routes.ts`: Interactive Swagger UI at `/api/v1/docs` and raw specification at `/api/v1/openapi.json`.
 
 9. **TypeScript Compiler Hardening** (`ce3c2b6`)
-   - `apps/api/tsconfig.json`: Added path aliases for `@s3forge/config` and `@s3forge/database`, enabled `noExplicitAny`.
+   - `apps/api/tsconfig.json`: Added path aliases for `@s3forge/config` and `@s3forge/database`, enabled `noImplicitAny`.
 
 10. **Resilient MinIO Client Wrapper** (`e598739`)
     - `apps/api/src/lib/minio-client.ts`: Exponential backoff with random jitter, transient network error detection, wrapped SDK methods.
@@ -76,6 +76,10 @@
 
 17. **pinoHttp ESM Import Fix** (`82a650d`)
     - `apps/api/src/middleware/request-logger.ts`: Switched to named import `import { pinoHttp } from 'pino-http'` for TypeScript NodeNext ESM compatibility.
+
+18. **TypeScript Monorepo Compilation Fixes** (`32bc702`)
+    - `apps/api/tsconfig.json`: Fixed `noImplicitAny` compiler flag name and removed `rootDir` restriction to allow workspace package source resolution.
+    - `apps/api/src/controllers/storage.controller.ts`: Type-safe string array narrowing for Express 5 params without type casting or `as any`.
 
 ---
 
