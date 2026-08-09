@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { constants } from '@s3forge/config';
 
 extendZodWithOpenApi(z);
 
@@ -11,13 +12,23 @@ export const ListAuditLogsQuerySchema = z
     page: z
       .string()
       .optional()
-      .transform((val) => (val ? Math.max(1, parseInt(val, 10)) : 1))
-      .openapi({ description: 'Page number (default: 1)', example: '1' }),
+      .transform((val) => (val ? Math.max(1, parseInt(val, 10)) : constants.PAGINATION.DEFAULT_PAGE))
+      .openapi({
+        description: `Page number (default: ${constants.PAGINATION.DEFAULT_PAGE})`,
+        example: String(constants.PAGINATION.DEFAULT_PAGE),
+      }),
     limit: z
       .string()
       .optional()
-      .transform((val) => (val ? Math.min(100, Math.max(1, parseInt(val, 10))) : 50))
-      .openapi({ description: 'Items per page (default: 50, max: 100)', example: '50' }),
+      .transform((val) =>
+        val
+          ? Math.min(constants.PAGINATION.MAX_LIMIT, Math.max(1, parseInt(val, 10)))
+          : constants.PAGINATION.DEFAULT_AUDIT_LIMIT,
+      )
+      .openapi({
+        description: `Items per page (default: ${constants.PAGINATION.DEFAULT_AUDIT_LIMIT}, max: ${constants.PAGINATION.MAX_LIMIT})`,
+        example: String(constants.PAGINATION.DEFAULT_AUDIT_LIMIT),
+      }),
     action: z
       .string()
       .optional()

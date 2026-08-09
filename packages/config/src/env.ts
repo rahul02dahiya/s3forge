@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import process from 'process';
+
+import { constants } from './constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,7 +27,7 @@ function required(name: string): string {
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
 
-  port: Number(process.env.PORT || 3000),
+  port: Number(process.env.PORT || constants.SERVER.DEFAULT_PORT),
 
   jwtSecret: process.env.JWT_SECRET || 'super-secret-default-s3forge-key-change-in-production',
 

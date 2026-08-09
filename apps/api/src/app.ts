@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import { constants } from '@s3forge/config';
 import { requestId } from './middleware/request-id.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { notFound } from './middleware/not-found.js';
@@ -12,12 +13,12 @@ const app = express();
 // --- Security middleware ---
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN || constants.SERVER.DEFAULT_CORS_ORIGIN,
   credentials: true,
 }));
 
 // --- Body parsing ---
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: constants.SERVER.BODY_LIMIT }));
 
 // --- Request tracking ---
 app.use(requestId);

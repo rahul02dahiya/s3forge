@@ -4,6 +4,7 @@ import { minio } from '../config/minio.js';
 import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
+import { constants } from '@s3forge/config';
 import type {
   PresignedUploadInput,
   PresignedDownloadInput,
@@ -24,7 +25,7 @@ export class ObjectService {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    const expirySeconds = input.expirySeconds ?? 3600;
+    const expirySeconds = input.expirySeconds ?? constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS;
     const uploadUrl = await minioService.presignedPutObject(
       bucket.minioBucketName,
       input.objectName,
@@ -68,7 +69,7 @@ export class ObjectService {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    const expirySeconds = input.expirySeconds ?? 3600;
+    const expirySeconds = input.expirySeconds ?? constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS;
     const downloadUrl = await minioService.presignedGetObject(
       bucket.minioBucketName,
       input.objectName,
@@ -114,7 +115,7 @@ export class ObjectService {
 
     const prefix = query.prefix ?? '';
     const recursive = query.recursive ?? true;
-    const limit = query.limit ?? 100;
+    const limit = query.limit ?? constants.PAGINATION.DEFAULT_OBJECT_LIMIT;
 
     const objectsList: Array<{
       name: string;

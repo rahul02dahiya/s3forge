@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { constants } from '@s3forge/config';
 
 extendZodWithOpenApi(z);
 
@@ -11,11 +12,20 @@ export const PresignedUploadSchema = z
       .openapi({ description: 'Name/path of the object to upload', example: 'photos/vacation.jpg' }),
     expirySeconds: z
       .number()
-      .min(60, 'Expiry must be at least 60 seconds')
-      .max(604800, 'Expiry cannot exceed 7 days (604800 seconds)')
+      .min(
+        constants.STORAGE.MIN_PRESIGNED_EXPIRY_SECONDS,
+        `Expiry must be at least ${constants.STORAGE.MIN_PRESIGNED_EXPIRY_SECONDS} seconds`,
+      )
+      .max(
+        constants.STORAGE.MAX_PRESIGNED_EXPIRY_SECONDS,
+        `Expiry cannot exceed ${constants.STORAGE.MAX_PRESIGNED_EXPIRY_SECONDS} seconds`,
+      )
       .optional()
-      .default(3600)
-      .openapi({ description: 'Presigned URL expiration in seconds (default: 3600)', example: 3600 }),
+      .default(constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS)
+      .openapi({
+        description: `Presigned URL expiration in seconds (default: ${constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS})`,
+        example: constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS,
+      }),
     contentType: z
       .string()
       .optional()
@@ -33,11 +43,20 @@ export const PresignedDownloadSchema = z
       .openapi({ description: 'Name/path of the object to download', example: 'photos/vacation.jpg' }),
     expirySeconds: z
       .number()
-      .min(60, 'Expiry must be at least 60 seconds')
-      .max(604800, 'Expiry cannot exceed 7 days (604800 seconds)')
+      .min(
+        constants.STORAGE.MIN_PRESIGNED_EXPIRY_SECONDS,
+        `Expiry must be at least ${constants.STORAGE.MIN_PRESIGNED_EXPIRY_SECONDS} seconds`,
+      )
+      .max(
+        constants.STORAGE.MAX_PRESIGNED_EXPIRY_SECONDS,
+        `Expiry cannot exceed ${constants.STORAGE.MAX_PRESIGNED_EXPIRY_SECONDS} seconds`,
+      )
       .optional()
-      .default(3600)
-      .openapi({ description: 'Presigned URL expiration in seconds (default: 3600)', example: 3600 }),
+      .default(constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS)
+      .openapi({
+        description: `Presigned URL expiration in seconds (default: ${constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS})`,
+        example: constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS,
+      }),
   })
   .openapi('PresignedDownloadInput');
 
@@ -57,8 +76,18 @@ export const ListObjectsQuerySchema = z
     limit: z
       .string()
       .optional()
-      .transform((val) => (val ? Math.min(1000, Math.max(1, parseInt(val, 10))) : 100))
-      .openapi({ description: 'Maximum number of objects to return (default: 100)', example: '100' }),
+      .transform((val) =>
+        val
+          ? Math.min(
+              constants.PAGINATION.MAX_OBJECT_LIMIT,
+              Math.max(1, parseInt(val, 10)),
+            )
+          : constants.PAGINATION.DEFAULT_OBJECT_LIMIT,
+      )
+      .openapi({
+        description: `Maximum number of objects to return (default: ${constants.PAGINATION.DEFAULT_OBJECT_LIMIT})`,
+        example: String(constants.PAGINATION.DEFAULT_OBJECT_LIMIT),
+      }),
   })
   .openapi('ListObjectsQuery');
 
@@ -80,7 +109,10 @@ export const BatchDeleteObjectsSchema = z
     objectNames: z
       .array(z.string().min(1))
       .min(1, 'At least one object name is required')
-      .max(1000, 'Cannot delete more than 1000 objects in a single batch')
+      .max(
+        constants.STORAGE.MAX_BATCH_DELETE_SIZE,
+        `Cannot delete more than ${constants.STORAGE.MAX_BATCH_DELETE_SIZE} objects in a single batch`,
+      )
       .openapi({ description: 'Array of object key names to delete', example: ['file1.txt', 'file2.txt'] }),
   })
   .openapi('BatchDeleteObjectsInput');

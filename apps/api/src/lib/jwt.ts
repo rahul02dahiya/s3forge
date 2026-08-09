@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { env } from '@s3forge/config';
+import { env, constants } from '@s3forge/config';
 
 export interface JwtPayload {
   userId: number;
@@ -34,7 +34,10 @@ function base64UrlDecode(str: string): string {
 /**
  * Sign a payload into a JWT token (valid for 7 days by default).
  */
-export function signJwt(payload: Omit<JwtPayload, 'iat' | 'exp'>, expiresInSeconds: number = 7 * 24 * 60 * 60): string {
+export function signJwt(
+  payload: Omit<JwtPayload, 'iat' | 'exp'>,
+  expiresInSeconds: number = constants.AUTH.JWT_EXPIRES_IN_SECONDS,
+): string {
   const secret = env.jwtSecret;
   const header = { alg: 'HS256', typ: 'JWT' };
   const iat = Math.floor(Date.now() / 1000);

@@ -3,16 +3,14 @@ import { buckets } from '@s3forge/database';
 import { eq } from 'drizzle-orm';
 import { usageService } from '../services/usage.service.js';
 import { logger } from '../lib/logger.js';
-
-// Default snapshot interval: 1 hour (3,600,000 milliseconds)
-const DEFAULT_INTERVAL_MS = 60 * 60 * 1000;
+import { constants } from '@s3forge/config';
 
 export class SnapshotWorker {
   private timer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
   private intervalMs: number;
 
-  constructor(intervalMs: number = DEFAULT_INTERVAL_MS) {
+  constructor(intervalMs: number = constants.WORKER.SNAPSHOT_INTERVAL_MS) {
     this.intervalMs = intervalMs;
   }
 
@@ -27,12 +25,12 @@ export class SnapshotWorker {
 
     logger.info({ intervalMs: this.intervalMs }, 'Starting usage snapshot background worker');
 
-    // Run initial snapshot pass asynchronously 5 seconds after server bootstrap
+    // Run initial snapshot pass asynchronously after initial delay
     setTimeout(() => {
       this.runSnapshotPass().catch((err) => {
         logger.error({ err }, 'Initial usage snapshot worker pass failed');
       });
-    }, 5000);
+    }, constants.WORKER.SNAPSHOT_INITIAL_DELAY_MS);
 
     // Schedule recurring interval passes
     this.timer = setInterval(() => {
@@ -50,6 +48,33 @@ export class SnapshotWorker {
       clearInterval(this.timer);
       this.timer = null;
       logger.info('Stopped usage snapshot background worker');
+    }
+  }
+
+  /**
+   * Recalculates usage for a bucket with retries.
+   */
+  private async recalculateWithRetry(
+    bucketName: string,
+    organizationId: number,
+  ): Promise<void> {
+    const maxRetries = constants.WORKER.SNAPSHOT_MAX_RETRIES;
+    const retryDelay = constants.WORKER.SNAPSHOT_RETRY_DELAY_MS;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await usageService.recalculateBucketUsage(bucketName, organizationId);
+        return;
+      } catch (error) {
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        logger.warn(
+          { bucketName, organizationId, attempt, maxRetries, retryDelay },
+          `Snapshot recalculation failed for bucket '${bucketName}', retrying...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
     }
   }
 
@@ -78,13 +103,13 @@ export class SnapshotWorker {
 
       for (const bucket of activeBuckets) {
         try {
-          await usageService.recalculateBucketUsage(bucket.name, bucket.organizationId);
+          await this.recalculateWithRetry(bucket.name, bucket.organizationId);
           successCount += 1;
         } catch (error) {
           failureCount += 1;
           logger.error(
             { err: error, bucketName: bucket.name, organizationId: bucket.organizationId },
-            `Failed to snapshot usage for bucket '${bucket.name}'`,
+            `Failed to snapshot usage for bucket '${bucket.name}' after max retries`,
           );
         }
       }

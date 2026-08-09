@@ -1,14 +1,14 @@
 import app from './app.js';
-import { env } from '@s3forge/config';
+import { env, constants } from '@s3forge/config';
 import { logger } from './lib/logger.js';
 import { db } from './config/database.js';
 import { snapshotWorker } from './workers/snapshot-worker.js';
 import { sql } from 'drizzle-orm';
 import type { Server } from 'node:http';
 
-const SHUTDOWN_TIMEOUT_MS = 10_000;
-const MAX_RETRIES = 5;
-const BASE_DELAY_MS = 1_000;
+const SHUTDOWN_TIMEOUT_MS = constants.SERVER.SHUTDOWN_TIMEOUT_MS;
+const MAX_RETRIES = constants.SERVER.DB_CONNECT_MAX_RETRIES;
+const BASE_DELAY_MS = constants.SERVER.DB_CONNECT_BASE_DELAY_MS;
 
 /**
  * Attempts to connect to PostgreSQL with exponential backoff.

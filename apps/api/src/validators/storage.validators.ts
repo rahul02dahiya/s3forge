@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { openApiRegistry } from '../config/swagger.js';
-
-// Regex constraint matching S3/MinIO bucket naming standard
-const BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
+import { constants } from '@s3forge/config';
 
 export const CreateBucketSchema = z
   .object({
@@ -11,7 +9,7 @@ export const CreateBucketSchema = z
       .min(3, 'Bucket name must be at least 3 characters long')
       .max(63, 'Bucket name cannot exceed 63 characters')
       .regex(
-        BUCKET_NAME_REGEX,
+        constants.STORAGE.BUCKET_NAME_REGEX,
         'Bucket name must contain only lowercase letters, numbers, hyphens, and dots, and start/end with an alphanumeric character',
       )
       .openapi({
@@ -20,10 +18,10 @@ export const CreateBucketSchema = z
       }),
     region: z
       .string()
-      .default('us-east-1')
+      .default(constants.STORAGE.DEFAULT_REGION)
       .openapi({
         description: 'S3 storage region',
-        example: 'us-east-1',
+        example: constants.STORAGE.DEFAULT_REGION,
       }),
     visibility: z
       .enum(['private', 'public'])
@@ -50,7 +48,7 @@ export const BucketNameParamSchema = z
       .string()
       .min(3)
       .max(63)
-      .regex(BUCKET_NAME_REGEX)
+      .regex(constants.STORAGE.BUCKET_NAME_REGEX)
       .openapi({
         description: 'Unique name of the bucket',
         example: 'my-app-assets',
@@ -65,16 +63,19 @@ export const ListBucketsQuerySchema = z
       .number()
       .int()
       .min(1)
-      .default(1)
-      .openapi({ description: 'Page number for pagination', example: 1 }),
+      .default(constants.PAGINATION.DEFAULT_PAGE)
+      .openapi({ description: 'Page number for pagination', example: constants.PAGINATION.DEFAULT_PAGE }),
     limit: z
       .coerce
       .number()
       .int()
       .min(1)
-      .max(100)
-      .default(20)
-      .openapi({ description: 'Number of items per page (max 100)', example: 20 }),
+      .max(constants.PAGINATION.MAX_LIMIT)
+      .default(constants.PAGINATION.DEFAULT_LIMIT)
+      .openapi({
+        description: `Number of items per page (max ${constants.PAGINATION.MAX_LIMIT})`,
+        example: constants.PAGINATION.DEFAULT_LIMIT,
+      }),
   })
   .openapi('ListBucketsQuery');
 
