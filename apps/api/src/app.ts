@@ -1,28 +1,36 @@
-import express from "express";
-import { db } from "./config/database.js";
-import { sql } from "drizzle-orm";
-import storageRoutes from './routes/storage.routes.js';
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import { constants } from '@s3forge/config';
+import { requestId } from './middleware/request-id.js';
+import { requestLogger } from './middleware/request-logger.js';
+import { requestTimeout } from './middleware/timeout.js';
+import { notFound } from './middleware/not-found.js';
+import { errorHandler } from './middleware/error-handler.js';
+import { apiRouter } from './routes/index.js';
 
 const app = express();
 
-app.use(express.json());
+// --- Security middleware ---
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || constants.SERVER.DEFAULT_CORS_ORIGIN,
+  credentials: true,
+}));
 
-app.get("/health", async (_req, res) => {
-  try {
-    await db.execute(sql`select 1`);
+// --- Body parsing ---
+app.use(express.json({ limit: constants.SERVER.BODY_LIMIT }));
 
-    res.json({
-      status: "ok",
-      database: "connected",
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      database: "disconnected",
-    });
-  }
-});
+// --- Request tracking & timeout ---
+app.use(requestId);
+app.use(requestLogger);
+app.use(requestTimeout);
 
-app.use('/storage', storageRoutes);
+// --- API routes (all under /api/v1) ---
+app.use('/api/v1', apiRouter);
+
+// --- Error handling (must be last) ---
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;
