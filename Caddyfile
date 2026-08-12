@@ -1,0 +1,18 @@
+s3forge.chizumizu.space {
+	# Enable compression for API responses & Swagger assets
+	encode gzip zstd
+
+	# Convenience redirects to Swagger UI
+	redir / /api/v1/docs 308
+	redir /docs /api/v1/docs 308
+
+	# MinIO Admin Web Console (runs on port 9001 inside container)
+	handle_path /admin* {
+		reverse_proxy minio:9001
+	}
+
+	# Express API Backend & Swagger UI (runs on port 3000 inside container)
+	handle {
+		reverse_proxy api:3000
+	}
+}
