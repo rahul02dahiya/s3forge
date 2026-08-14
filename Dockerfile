@@ -2,6 +2,7 @@
 FROM node:22-alpine
 
 # Enable pnpm via corepack
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app

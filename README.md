@@ -38,9 +38,15 @@ To deploy S3Forge on your production server using Docker and Caddy:
 
 2. **Configure DNS**: Ensure `s3forge.chizumizu.space` points to your server's public IP address (Ports 80 & 443 open).
 
-3. **Start Containers**: Run Docker Compose in detached mode:
+3. **Start Containers**: Run using Docker Compose or Podman Compose in detached mode:
    ```bash
+   # Using Docker Compose
    docker compose -f docker-compose.prod.yml up -d --build
+
+   # Or using Podman Compose
+   podman compose -f docker-compose.prod.yml up -d --build
+   # Or using npm/pnpm script
+   pnpm podman:prod
    ```
 
 4. **Access Services**:
@@ -88,3 +94,21 @@ For more information, visit the [official MinIO website](https://www.min.io/).
 A license for S3Forge has not been selected yet.
 
 Third-party software and dependencies used by this project remain subject to their respective licenses. See the [MinIO project](https://github.com/minio/minio) for licensing information applicable to MinIO.
+
+## Container Engine Support (Docker & Podman)
+
+S3Forge supports both **Docker** and **Podman** seamlessly. For full details on rootless setup, socket configuration, troubleshooting, and verification tests, see the [Podman Operations Guide](dev_docs/podman-guide.md).
+
+```bash
+# Start development infrastructure (Postgres + MinIO) with Podman
+pnpm podman:up
+
+# Run database migrations
+pnpm db:migrate
+
+# Start local API dev server
+pnpm dev:api
+
+# Tear down containers
+pnpm podman:down
+```
