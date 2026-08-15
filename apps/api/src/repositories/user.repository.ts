@@ -1,6 +1,6 @@
 import { db } from '../config/database.js';
 import { users, organizations, organizationMembers } from '@s3forge/database';
-import { eq } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 
 export interface CreateUserData {
   email: string;
@@ -85,6 +85,52 @@ export class UserRepository {
 
       return { user: newUser, organization: newOrg };
     });
+  }
+  /**
+   * Save password reset token hash and expiration for a user.
+   */
+  async saveResetToken(userId: number, tokenHash: string, expiresAt: Date) {
+    await db
+      .update(users)
+      .set({
+        resetTokenHash: tokenHash,
+        resetTokenExpiresAt: expiresAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  }
+
+  /**
+   * Find user by valid, non-expired password reset token hash.
+   */
+  async findByResetTokenHash(tokenHash: string) {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.resetTokenHash, tokenHash),
+          gt(users.resetTokenExpiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+
+    return user ?? null;
+  }
+
+  /**
+   * Update password hash and clear reset token fields.
+   */
+  async updatePasswordAndClearResetToken(userId: number, newPasswordHash: string) {
+    await db
+      .update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        resetTokenHash: null,
+        resetTokenExpiresAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
   }
 }
 

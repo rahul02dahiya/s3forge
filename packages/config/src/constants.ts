@@ -51,6 +51,12 @@ const DEFAULT_CONSTANTS = {
     DEFAULT_SECURE: false,
     RESET_TOKEN_EXPIRY_SECONDS: 3600,
   },
+  RATE_LIMIT: {
+    FORGOT_PASSWORD_WINDOW_MS: 15 * 60 * 1000,
+    FORGOT_PASSWORD_LIMIT: 3,
+    RESET_PASSWORD_WINDOW_MS: 15 * 60 * 1000,
+    RESET_PASSWORD_LIMIT: 5,
+  },
 };
 
 export type AppConstants = typeof DEFAULT_CONSTANTS;
@@ -85,6 +91,7 @@ function parseJsonFile(filePath: string): AppConstants {
       },
       PAGINATION: { ...DEFAULT_CONSTANTS.PAGINATION, ...parsed.PAGINATION },
       MAIL: { ...DEFAULT_CONSTANTS.MAIL, ...parsed.MAIL },
+      RATE_LIMIT: { ...DEFAULT_CONSTANTS.RATE_LIMIT, ...parsed.RATE_LIMIT },
     };
   } catch {
     return DEFAULT_CONSTANTS;
@@ -99,6 +106,7 @@ export const constants: AppConstants = {
   STORAGE: { ...DEFAULT_CONSTANTS.STORAGE },
   PAGINATION: { ...DEFAULT_CONSTANTS.PAGINATION },
   MAIL: { ...DEFAULT_CONSTANTS.MAIL },
+  RATE_LIMIT: { ...DEFAULT_CONSTANTS.RATE_LIMIT },
 };
 
 // Initial synchronous load

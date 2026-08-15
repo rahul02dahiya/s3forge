@@ -46,14 +46,14 @@ HTTP Request
 - **Responsibility**: Extracts validated input from the request, calls the appropriate service method, and formats the result into standard JSON success envelopes (`sendSuccess` helper in `apps/api/src/lib/response.ts`). Controllers contain no SQL or direct MinIO calls.
 
 ### 5. Service Layer (`apps/api/src/services/`)
-- **Location**: `apps/api/src/services/` (`auth.service.ts`, `storage.service.ts`, `credential.service.ts`, `usage.service.ts`, `audit.service.ts`, `object.service.ts`)
-- **Role**: Core business logic, storage scans, presigned URL generation, and non-blocking audit event emitting.
-- **Responsibility**: Implements domain rules such as organization-prefixing bucket names, generating S3 keypairs with timing-safe SHA-256 secret hashing, generating S3 presigned upload/download URLs, scanning MinIO storage object byte sizes, and triggering non-blocking audit logs for state changes.
+- **Location**: `apps/api/src/services/` (`auth.service.ts`, `email.service.ts`, `storage.service.ts`, `credential.service.ts`, `usage.service.ts`, `audit.service.ts`, `object.service.ts`)
+- **Role**: Core business logic, transactional email delivery, storage scans, presigned URL generation, and non-blocking audit event emitting.
+- **Responsibility**: Implements domain rules such as organization-prefixing bucket names, generating S3 keypairs with timing-safe SHA-256 secret hashing, generating S3 presigned upload/download URLs, rendering transactional HTML email templates (`apps/api/src/templates/email/` base template, password resets, welcome emails), and triggering non-blocking audit logs for state changes.
 
 ### 6. Repository Layer (`apps/api/src/repositories/`)
 - **Location**: `apps/api/src/repositories/` (`user.repository.ts`, `bucket.repository.ts`, `s3-credential.repository.ts`, `usage-snapshot.repository.ts`, `audit-log.repository.ts`)
 - **Role**: Pure data access abstraction over Drizzle ORM.
-- **Responsibility**: Executes SQL queries against PostgreSQL tables (`users`, `organizations`, `organization_members`, `buckets`, `s3_credentials`, `usage_snapshots`, `audit_logs`). Handles pagination math, organization filtering, and soft-delete filtering.
+- **Responsibility**: Executes SQL queries against PostgreSQL tables (`users`, `organizations`, `organization_members`, `buckets`, `s3_credentials`, `usage_snapshots`, `audit_logs`). Handles SHA-256 password reset token hash storage, pagination math, organization filtering, and soft-delete filtering.
 
 ### 7. MinIO Storage Client Wrapper (`apps/api/src/lib/minio-client.ts`)
 - **Location**: `apps/api/src/lib/minio-client.ts`
@@ -69,7 +69,8 @@ HTTP Request
 
 ## Global Cross-Cutting Concerns
 
+- **Request Rate Limiting**: Sensitive endpoints (e.g., `/auth/forgot-password` and `/auth/reset-password`) are protected by `express-rate-limit` using limits defined in `constants.json` via `@s3forge/config`.
 - **Request ID Tracking**: Every request is assigned a UUID v4 correlation ID by `apps/api/src/middleware/request-id.ts`. This ID is included in response headers (`X-Request-Id`) and attached to logger instances.
-- **Audit Logging System**: Platform state modifications (e.g. `user.register`, `user.login`, `bucket.create`, `bucket.delete`, `credential.create`, `credential.revoke`, `object.presigned_upload`, `object.presigned_download`, `object.delete`, `object.batch_delete`) are asynchronously recorded by `auditService.recordAudit()` into `audit_logs` table without blocking user response latency.
+- **Audit Logging System**: Platform state modifications (e.g. `user.register`, `user.login`, `user.password_reset`, `bucket.create`, `bucket.delete`, `credential.create`, `credential.revoke`, `object.presigned_upload`, `object.presigned_download`, `object.delete`, `object.batch_delete`) are asynchronously recorded by `auditService.recordAudit()` into `audit_logs` table (including client `ipAddress` and `userAgent`) without blocking user response latency.
 - **Structured Logging**: Log messages are formatted as JSON using Pino (`apps/api/src/lib/logger.ts`). Sensitive keys like passwords, secret keys, tokens, and authorization headers are redacted automatically.
 - **Error Handling**: Custom domain errors inherit from `AppError` (`apps/api/src/lib/app-error.ts`). Unhandled exceptions are caught by `apps/api/src/middleware/error-handler.ts` and returned as standard error envelopes without leaking internal stack traces in production.

@@ -41,7 +41,8 @@ PostgreSQL 17 and MinIO are managed via Docker Compose defined in the root `dock
 
 Database schemas are defined in `packages/database/src/schema/`.
 
-- **Applying Migrations**: Run `pnpm db:migrate` from the root directory to execute all pending SQL migrations located in `packages/database/drizzle/`.
+- **Applying Migrations**: Run `pnpm db:migrate` from the root directory to execute all pending SQL migrations located in `packages/database/src/migrations/`.
+- **Pushing Schema Directly**: Run `pnpm db:push` from the root directory to directly push schema updates to PostgreSQL during local development.
 - **Database Studio**: Run `pnpm db:studio` to open an interactive web interface for inspecting and editing database records directly.
 
 ---
