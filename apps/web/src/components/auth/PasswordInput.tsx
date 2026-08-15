@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
@@ -13,9 +13,10 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
 
     return (
       <div className="relative">
+        <Lock className="absolute left-3 top-[11px] h-5 w-5 text-muted-foreground z-10" />
         <Input
           type={showPassword ? "text" : "password"}
-          className={cn("pr-10", className)}
+          className={cn("pl-10 pr-10", className)}
           ref={ref}
           {...props}
         />
