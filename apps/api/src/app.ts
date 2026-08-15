@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { constants } from '@s3forge/config';
+import { env, constants } from '@s3forge/config';
 import { requestId } from './middleware/request-id.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { requestTimeout } from './middleware/timeout.js';
@@ -14,7 +14,7 @@ const app = express();
 // --- Security middleware ---
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || constants.SERVER.DEFAULT_CORS_ORIGIN,
+  origin: env.corsOrigin,
   credentials: true,
 }));
 
