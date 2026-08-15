@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -42,13 +43,14 @@ export function LoginPage() {
 
   const rememberMe = watch("rememberMe");
 
-  async function onSubmit(_data: LoginFormValues) {
+  async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
-      await signIn(); // Simulation
+      await signIn({ email: data.email, password: data.password });
+      toast.success("Successfully signed in");
       navigate("/"); // Navigate to dashboard/home after successful login
-    } catch (error) {
-      // Handle error
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign in");
     } finally {
       setIsLoading(false);
     }

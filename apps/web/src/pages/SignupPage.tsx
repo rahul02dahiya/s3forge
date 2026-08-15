@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -51,13 +52,18 @@ export function SignupPage() {
 
   const terms = watch("terms");
 
-  async function onSubmit(_data: SignupFormValues) {
+  async function onSubmit(data: SignupFormValues) {
     setIsLoading(true);
     try {
-      await signUp(); // Simulation
+      await signUp({ 
+        email: data.email, 
+        password: data.password,
+        displayName: data.name
+      });
+      toast.success("Account created successfully");
       navigate("/login"); // Navigate to login after successful signup
-    } catch (error) {
-      // Handle error
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }
