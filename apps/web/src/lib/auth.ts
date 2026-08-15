@@ -16,12 +16,13 @@ export async function signIn(input: LoginInput) {
     );
   }
   
-  // Assuming the API returns { token: "..." } or similar
-  if ((data as any)?.token) {
-    localStorage.setItem("token", (data as any).token);
+  // The backend uses sendSuccess which wraps the payload in `data`
+  const payload = (data as any)?.data;
+  if (payload?.token) {
+    localStorage.setItem("token", payload.token);
   }
   
-  return data;
+  return payload;
 }
 
 export async function signUp(input: RegisterInput) {
@@ -36,11 +37,12 @@ export async function signUp(input: RegisterInput) {
     );
   }
   
-  if ((data as any)?.token) {
-    localStorage.setItem("token", (data as any).token);
+  const payload = (data as any)?.data;
+  if (payload?.token) {
+    localStorage.setItem("token", payload.token);
   }
   
-  return data;
+  return payload;
 }
 
 export async function signOut() {

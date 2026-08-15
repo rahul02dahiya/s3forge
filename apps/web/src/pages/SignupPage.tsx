@@ -61,7 +61,7 @@ export function SignupPage() {
         displayName: data.name
       });
       toast.success("Account created successfully");
-      navigate("/login"); // Navigate to login after successful signup
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Failed to create account");
     } finally {

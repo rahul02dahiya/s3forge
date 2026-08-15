@@ -2,7 +2,10 @@ import { Router } from 'express';
 import { auditController } from '../controllers/audit.controller.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
-import { ListAuditLogsQuerySchema } from '../validators/audit.validators.js';
+import { 
+  ListAuditLogsQuerySchema,
+  AuditLogListResponseSchema 
+} from '../validators/audit.validators.js';
 import { openApiRegistry } from '../config/swagger.js';
 
 const router = Router();
@@ -13,12 +16,15 @@ openApiRegistry.registerPath({
   path: '/audit-logs',
   summary: 'Get paginated audit log entries for organization',
   tags: ['Audit Logs'],
-  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  security: [{ bearerAuth: [] }],
   request: {
     query: ListAuditLogsQuerySchema,
   },
   responses: {
-    200: { description: 'Paginated audit log records' },
+    200: { 
+      description: 'Paginated audit log records',
+      content: { 'application/json': { schema: AuditLogListResponseSchema } }
+    },
     401: { description: 'Unauthorized' },
   },
 });
@@ -26,7 +32,7 @@ openApiRegistry.registerPath({
 // Route Definition
 router.get(
   '/',
-  authenticate({ optional: true }),
+  authenticate({ allowAccessKey: false }),
   validate({ query: ListAuditLogsQuerySchema }),
   (req, res, next) => auditController.listAuditLogs(req, res).catch(next),
 );

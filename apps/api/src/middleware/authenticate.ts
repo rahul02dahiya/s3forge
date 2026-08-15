@@ -5,6 +5,7 @@ import { AppError } from '../lib/app-error.js';
 
 export interface AuthenticateOptions {
   optional?: boolean;
+  allowAccessKey?: boolean;
 }
 
 /**
@@ -31,14 +32,16 @@ export function authenticate(options: AuthenticateOptions = {}) {
       }
 
       // 2. Check S3 Access Key in header (e.g. X-S3Forge-Access-Key or X-Access-Key)
-      const accessKeyHeader = (req.headers['x-s3forge-access-key'] || req.headers['x-access-key']) as string | undefined;
-      if (accessKeyHeader) {
-        const credential = await s3CredentialRepository.findByAccessKey(accessKeyHeader.trim());
-        if (credential && credential.isActive) {
-          req.organizationId = credential.organizationId;
-          // Touch last used timestamp asynchronously
-          s3CredentialRepository.updateLastUsed(credential.accessKey).catch(() => {});
-          return next();
+      if (options.allowAccessKey !== false) {
+        const accessKeyHeader = (req.headers['x-s3forge-access-key'] || req.headers['x-access-key']) as string | undefined;
+        if (accessKeyHeader) {
+          const credential = await s3CredentialRepository.findByAccessKey(accessKeyHeader.trim());
+          if (credential && credential.isActive) {
+            req.organizationId = credential.organizationId;
+            // Touch last used timestamp asynchronously
+            s3CredentialRepository.updateLastUsed(credential.accessKey).catch(() => {});
+            return next();
+          }
         }
       }
 

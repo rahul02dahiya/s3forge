@@ -1,0 +1,1802 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S3Forge Management API",
+    "version": "1.0.0",
+    "description": "Open-source, self-hosted platform API for managing S3-compatible object storage powered by MinIO.",
+    "contact": {
+      "name": "S3Forge Engineering Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "V1 API Base Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authorization header for authenticated user dashboard requests (Authorization: Bearer <token>)"
+      },
+      "s3AccessKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-S3Forge-Access-Key",
+        "description": "S3 Access Key header for programmatic access to S3Forge management APIs"
+      }
+    },
+    "schemas": {
+      "CreateBucketRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+            "description": "User-defined bucket name",
+            "example": "my-app-assets"
+          },
+          "region": {
+            "type": "string",
+            "default": "us-east-1",
+            "description": "S3 storage region",
+            "example": "us-east-1"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ],
+            "default": "private",
+            "description": "Bucket access visibility",
+            "example": "private"
+          },
+          "quotaBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Optional storage quota limit in bytes (0 = unlimited)",
+            "example": 10737418240
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "BucketNameParam": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+            "description": "Unique name of the bucket",
+            "example": "my-app-assets"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "ListBucketsQuery": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Page number for pagination",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Number of items per page (max 100)",
+            "example": 20
+          }
+        }
+      },
+      "Bucket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "organizationId": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "minioBucketName": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "quotaBytes": {
+            "type": "number"
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "name",
+          "minioBucketName",
+          "region",
+          "visibility",
+          "quotaBytes",
+          "isDeleted",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "BucketListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bucket"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "page",
+              "limit",
+              "total"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "BucketDetailResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Bucket"
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "OrganizationUsageResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "organizationId": {
+                "type": "number"
+              },
+              "totalBuckets": {
+                "type": "number"
+              },
+              "totalObjects": {
+                "type": "number"
+              },
+              "totalStorageBytes": {
+                "type": "number"
+              },
+              "bucketsUsage": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "objectCount": {
+                      "type": "number"
+                    },
+                    "totalBytes": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "objectCount",
+                    "totalBytes"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "organizationId",
+              "totalBuckets",
+              "totalObjects",
+              "totalStorageBytes",
+              "bucketsUsage"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "BucketUsageResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "bucket": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "minioBucketName": {
+                    "type": "string"
+                  },
+                  "region": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "minioBucketName",
+                  "region"
+                ]
+              },
+              "currentUsage": {
+                "type": "object",
+                "properties": {
+                  "objectCount": {
+                    "type": "number"
+                  },
+                  "totalBytes": {
+                    "type": "number"
+                  },
+                  "calculatedAt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "objectCount",
+                  "totalBytes",
+                  "calculatedAt"
+                ]
+              },
+              "history": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "objectCount": {
+                      "type": "number"
+                    },
+                    "totalBytes": {
+                      "type": "number"
+                    },
+                    "calculatedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "objectCount",
+                    "totalBytes",
+                    "calculatedAt"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "bucket",
+              "currentUsage",
+              "history"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "RegisterInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address",
+            "example": "dev@s3forge.org"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 100,
+            "description": "Password (min 8 characters)",
+            "example": "SecurePassword123!"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50,
+            "description": "Full name or display name",
+            "example": "Alex Developer"
+          },
+          "organizationName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50,
+            "description": "Optional initial organization name",
+            "example": "Acme Cloud Services"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "displayName"
+        ]
+      },
+      "LoginInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address",
+            "example": "dev@s3forge.org"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "User password",
+            "example": "SecurePassword123!"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "PresignedUploadResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "objectName": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "PUT"
+                ]
+              },
+              "expiresAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url",
+              "objectName",
+              "method",
+              "expiresAt"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "PresignedUploadInput": {
+        "type": "object",
+        "properties": {
+          "objectName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name/path of the object to upload",
+            "example": "photos/vacation.jpg"
+          },
+          "expirySeconds": {
+            "type": "number",
+            "minimum": 60,
+            "maximum": 604800,
+            "default": 3600,
+            "description": "Presigned URL expiration in seconds (default: 3600)",
+            "example": 3600
+          },
+          "contentType": {
+            "type": "string",
+            "description": "Expected MIME content type",
+            "example": "image/jpeg"
+          }
+        },
+        "required": [
+          "objectName"
+        ]
+      },
+      "PresignedDownloadResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "objectName": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET"
+                ]
+              },
+              "expiresAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url",
+              "objectName",
+              "method",
+              "expiresAt"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "PresignedDownloadInput": {
+        "type": "object",
+        "properties": {
+          "objectName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name/path of the object to download",
+            "example": "photos/vacation.jpg"
+          },
+          "expirySeconds": {
+            "type": "number",
+            "minimum": 60,
+            "maximum": 604800,
+            "default": 3600,
+            "description": "Presigned URL expiration in seconds (default: 3600)",
+            "example": 3600
+          }
+        },
+        "required": [
+          "objectName"
+        ]
+      },
+      "ObjectMetadata": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "lastModified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "size": {
+            "type": "number"
+          },
+          "etag": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "lastModified",
+          "size"
+        ]
+      },
+      "ListObjectsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectMetadata"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "data"
+        ]
+      },
+      "DeleteObjectInput": {
+        "type": "object",
+        "properties": {
+          "objectName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name/path of the object to delete",
+            "example": "photos/vacation.jpg"
+          }
+        },
+        "required": [
+          "objectName"
+        ]
+      },
+      "BatchDeleteObjectsInput": {
+        "type": "object",
+        "properties": {
+          "objectNames": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "maxItems": 1000,
+            "description": "Array of object key names to delete",
+            "example": [
+              "file1.txt",
+              "file2.txt"
+            ]
+          }
+        },
+        "required": [
+          "objectNames"
+        ]
+      },
+      "CredentialResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "accessKey": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "accessKey",
+          "description",
+          "isActive",
+          "lastUsedAt",
+          "createdAt"
+        ]
+      },
+      "CredentialListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CredentialResponse"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "page",
+              "limit",
+              "total"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CredentialWithSecretResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "accessKey": {
+            "type": "string"
+          },
+          "secretKey": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "accessKey",
+          "secretKey",
+          "description",
+          "isActive",
+          "lastUsedAt",
+          "createdAt"
+        ]
+      },
+      "CreateCredentialInput": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Optional human-readable description for the S3 credential",
+            "example": "CI/CD Deployment Key"
+          }
+        }
+      },
+      "AuditLogResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "organizationId": {
+            "type": "number"
+          },
+          "userId": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "credentialId": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "action": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "details": {},
+          "ipAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "userId",
+          "credentialId",
+          "action",
+          "resource",
+          "ipAddress",
+          "userAgent",
+          "createdAt"
+        ]
+      },
+      "AuditLogListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditLogResponse"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "page",
+              "limit",
+              "total"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user account and organization",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully with JWT access token"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user credentials and receive JWT access token",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Invalid email or password"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get details of currently authenticated user and organization",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/storage/usage": {
+      "get": {
+        "summary": "Get organization-wide storage usage summary",
+        "tags": [
+          "Storage Usage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated storage and object count metrics across all buckets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationUsageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/buckets": {
+      "get": {
+        "summary": "List all storage buckets",
+        "tags": [
+          "Storage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "description": "Page number for pagination",
+              "example": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Number of items per page (max 100)",
+              "example": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of active buckets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new storage bucket",
+        "tags": [
+          "Storage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBucketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bucket created successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "409": {
+            "description": "Bucket already exists"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}": {
+      "get": {
+        "summary": "Get details of a specific storage bucket",
+        "tags": [
+          "Storage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bucket details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Soft-delete a storage bucket",
+        "tags": [
+          "Storage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bucket soft-deleted successfully"
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}/usage": {
+      "get": {
+        "summary": "Get bucket storage usage and history trend",
+        "tags": [
+          "Storage Usage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Number of historical data points (default: 30)",
+              "example": "30"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bucket usage metrics and snapshot history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketUsageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}/usage/recalculate": {
+      "post": {
+        "summary": "Trigger manual recalculation of bucket usage snapshot from MinIO",
+        "tags": [
+          "Storage Usage"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bucket usage recalculation complete"
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}/objects/presigned-upload": {
+      "post": {
+        "summary": "Generate presigned PUT URL for direct client S3 object upload",
+        "tags": [
+          "Objects"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresignedUploadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned upload URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUploadResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}/objects/presigned-download": {
+      "post": {
+        "summary": "Generate presigned GET URL for temporary file download",
+        "tags": [
+          "Objects"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresignedDownloadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned download URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedDownloadResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}/objects": {
+      "get": {
+        "summary": "List objects within a storage bucket",
+        "tags": [
+          "Objects"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter objects by key prefix",
+              "example": "photos/"
+            },
+            "required": false,
+            "name": "prefix",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Recursively search nested directories (default: true)",
+              "example": "true"
+            },
+            "required": false,
+            "name": "recursive",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Maximum number of objects to return (default: 100)",
+              "example": "100"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of bucket objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListObjectsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a single object from a storage bucket",
+        "tags": [
+          "Objects"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteObjectInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Object deleted successfully"
+          },
+          "404": {
+            "description": "Bucket or object not found"
+          }
+        }
+      }
+    },
+    "/storage/buckets/{name}/objects/batch-delete": {
+      "post": {
+        "summary": "Batch delete multiple objects from a storage bucket",
+        "tags": [
+          "Objects"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "s3AccessKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 63,
+              "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+              "description": "Unique name of the bucket",
+              "example": "my-app-assets"
+            },
+            "required": true,
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchDeleteObjectsInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch objects deleted successfully"
+          },
+          "404": {
+            "description": "Bucket not found"
+          }
+        }
+      }
+    },
+    "/credentials": {
+      "get": {
+        "summary": "List all S3 credentials for organization",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Page number (default: 1)",
+              "example": "1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Items per page (default: 20, max: 100)",
+              "example": "20"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of organization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new S3 access credential keypair",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCredentialInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credential keypair created successfully (secret key returned ONCE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialWithSecretResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/credentials/{id}": {
+      "get": {
+        "summary": "Get S3 credential details by ID",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Numeric primary key ID of the credential",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an S3 credential keypair",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Numeric primary key ID of the credential",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential deleted successfully"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/credentials/{id}/revoke": {
+      "patch": {
+        "summary": "Revoke (deactivate) an S3 credential keypair",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Numeric primary key ID of the credential",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential revoked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "summary": "Get paginated audit log entries for organization",
+        "tags": [
+          "Audit Logs"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Page number (default: 1)",
+              "example": "1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Items per page (default: 50, max: 100)",
+              "example": "50"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Optional action filter (e.g. bucket.create)",
+              "example": "bucket.create"
+            },
+            "required": false,
+            "name": "action",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated audit log records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

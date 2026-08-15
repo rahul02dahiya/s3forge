@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { credentialController } from '../controllers/credential.controller.js';
 import { validate } from '../middleware/validate.js';
+import { authenticate } from '../middleware/authenticate.js';
 import {
   CreateCredentialSchema,
   CredentialIdParamSchema,
   ListCredentialsQuerySchema,
+  CredentialResponseSchema,
+  CredentialWithSecretResponseSchema,
+  CredentialListResponseSchema,
 } from '../validators/credential.validators.js';
 import { openApiRegistry } from '../config/swagger.js';
 
@@ -16,11 +20,15 @@ openApiRegistry.registerPath({
   path: '/credentials',
   summary: 'List all S3 credentials for organization',
   tags: ['Credentials'],
+  security: [{ bearerAuth: [] }],
   request: {
     query: ListCredentialsQuerySchema,
   },
   responses: {
-    200: { description: 'Paginated list of organization credentials' },
+    200: { 
+      description: 'Paginated list of organization credentials',
+      content: { 'application/json': { schema: CredentialListResponseSchema } }
+    },
   },
 });
 
@@ -29,6 +37,7 @@ openApiRegistry.registerPath({
   path: '/credentials',
   summary: 'Create a new S3 access credential keypair',
   tags: ['Credentials'],
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -37,7 +46,10 @@ openApiRegistry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Credential keypair created successfully (secret key returned ONCE)' },
+    201: { 
+      description: 'Credential keypair created successfully (secret key returned ONCE)',
+      content: { 'application/json': { schema: CredentialWithSecretResponseSchema } }
+    },
     400: { description: 'Validation error' },
   },
 });
@@ -47,11 +59,15 @@ openApiRegistry.registerPath({
   path: '/credentials/{id}',
   summary: 'Get S3 credential details by ID',
   tags: ['Credentials'],
+  security: [{ bearerAuth: [] }],
   request: {
     params: CredentialIdParamSchema,
   },
   responses: {
-    200: { description: 'Credential details' },
+    200: { 
+      description: 'Credential details',
+      content: { 'application/json': { schema: CredentialResponseSchema } }
+    },
     404: { description: 'Credential not found' },
   },
 });
@@ -61,11 +77,15 @@ openApiRegistry.registerPath({
   path: '/credentials/{id}/revoke',
   summary: 'Revoke (deactivate) an S3 credential keypair',
   tags: ['Credentials'],
+  security: [{ bearerAuth: [] }],
   request: {
     params: CredentialIdParamSchema,
   },
   responses: {
-    200: { description: 'Credential revoked successfully' },
+    200: { 
+      description: 'Credential revoked successfully',
+      content: { 'application/json': { schema: CredentialResponseSchema } }
+    },
     404: { description: 'Credential not found' },
   },
 });
@@ -75,6 +95,7 @@ openApiRegistry.registerPath({
   path: '/credentials/{id}',
   summary: 'Delete an S3 credential keypair',
   tags: ['Credentials'],
+  security: [{ bearerAuth: [] }],
   request: {
     params: CredentialIdParamSchema,
   },
@@ -85,6 +106,11 @@ openApiRegistry.registerPath({
 });
 
 // Route Definitions
+router.use(validate({}), (req, res, next) => {
+  // Use authenticate middleware with allowAccessKey: false for all credential routes
+  authenticate({ allowAccessKey: false })(req, res, next);
+});
+
 router.get(
   '/',
   validate({ query: ListCredentialsQuerySchema }),

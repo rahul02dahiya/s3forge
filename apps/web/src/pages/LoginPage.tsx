@@ -48,7 +48,7 @@ export function LoginPage() {
     try {
       await signIn({ email: data.email, password: data.password });
       toast.success("Successfully signed in");
-      navigate("/"); // Navigate to dashboard/home after successful login
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in");
     } finally {

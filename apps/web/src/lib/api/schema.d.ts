@@ -164,7 +164,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["OrganizationUsageResponse"];
+                    };
                 };
             };
         };
@@ -201,7 +203,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["BucketListResponse"];
+                    };
                 };
             };
         };
@@ -273,7 +277,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["BucketDetailResponse"];
+                    };
                 };
                 /** @description Bucket not found */
                 404: {
@@ -345,7 +351,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["BucketUsageResponse"];
+                    };
                 };
                 /** @description Bucket not found */
                 404: {
@@ -437,7 +445,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["PresignedUploadResponse"];
+                    };
                 };
                 /** @description Bucket not found */
                 404: {
@@ -484,7 +494,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["PresignedDownloadResponse"];
+                    };
                 };
                 /** @description Bucket not found */
                 404: {
@@ -529,7 +541,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ListObjectsResponse"];
+                    };
                 };
                 /** @description Bucket not found */
                 404: {
@@ -651,7 +665,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["CredentialListResponse"];
+                    };
                 };
             };
         };
@@ -675,7 +691,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["CredentialWithSecretResponse"];
+                    };
                 };
                 /** @description Validation error */
                 400: {
@@ -716,7 +734,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["CredentialResponse"];
+                    };
                 };
                 /** @description Credential not found */
                 404: {
@@ -792,7 +812,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["CredentialResponse"];
+                    };
                 };
                 /** @description Credential not found */
                 404: {
@@ -831,7 +853,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["AuditLogListResponse"];
+                    };
                 };
                 /** @description Unauthorized */
                 401: {
@@ -901,6 +925,75 @@ export interface components {
              */
             limit: number;
         };
+        Bucket: {
+            id: number;
+            organizationId: number;
+            name: string;
+            minioBucketName: string;
+            region: string;
+            visibility: string;
+            quotaBytes: number;
+            isDeleted: boolean;
+            createdAt: string;
+            updatedAt: string;
+        };
+        BucketListResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: components["schemas"]["Bucket"][];
+            meta?: {
+                page: number;
+                limit: number;
+                total: number;
+            };
+        };
+        BucketDetailResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: components["schemas"]["Bucket"];
+        };
+        OrganizationUsageResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: {
+                organizationId: number;
+                totalBuckets: number;
+                totalObjects: number;
+                totalStorageBytes: number;
+                bucketsUsage: {
+                    id: number;
+                    name: string;
+                    objectCount: number;
+                    totalBytes: number;
+                }[];
+            };
+        };
+        BucketUsageResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: {
+                bucket: {
+                    id: number;
+                    name: string;
+                    minioBucketName: string;
+                    region: string;
+                };
+                currentUsage: {
+                    objectCount: number;
+                    totalBytes: number;
+                    calculatedAt: string | null;
+                };
+                history: {
+                    objectCount: number;
+                    totalBytes: number;
+                    calculatedAt: string | null;
+                }[];
+            };
+        };
         RegisterInput: {
             /**
              * Format: email
@@ -937,6 +1030,19 @@ export interface components {
              */
             password: string;
         };
+        PresignedUploadResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: {
+                /** Format: uri */
+                url: string;
+                objectName: string;
+                /** @enum {string} */
+                method: "PUT";
+                expiresAt: string;
+            };
+        };
         PresignedUploadInput: {
             /**
              * @description Name/path of the object to upload
@@ -955,6 +1061,19 @@ export interface components {
              */
             contentType?: string;
         };
+        PresignedDownloadResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: {
+                /** Format: uri */
+                url: string;
+                objectName: string;
+                /** @enum {string} */
+                method: "GET";
+                expiresAt: string;
+            };
+        };
         PresignedDownloadInput: {
             /**
              * @description Name/path of the object to download
@@ -967,6 +1086,18 @@ export interface components {
              * @example 3600
              */
             expirySeconds: number;
+        };
+        ObjectMetadata: {
+            name: string;
+            lastModified: string;
+            size: number;
+            etag?: string;
+        };
+        ListObjectsResponse: {
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: components["schemas"]["ObjectMetadata"][];
         };
         DeleteObjectInput: {
             /**
@@ -985,12 +1116,57 @@ export interface components {
              */
             objectNames: string[];
         };
+        CredentialResponse: {
+            id: number;
+            accessKey: string;
+            description: string | null;
+            isActive: boolean;
+            lastUsedAt: string | null;
+            createdAt: string;
+        };
+        CredentialListResponse: {
+            data: components["schemas"]["CredentialResponse"][];
+            meta: {
+                page: number;
+                limit: number;
+                total: number;
+            };
+        };
+        CredentialWithSecretResponse: {
+            id: number;
+            accessKey: string;
+            secretKey: string;
+            description: string | null;
+            isActive: boolean;
+            lastUsedAt: string | null;
+            createdAt: string;
+        };
         CreateCredentialInput: {
             /**
              * @description Optional human-readable description for the S3 credential
              * @example CI/CD Deployment Key
              */
             description?: string;
+        };
+        AuditLogResponse: {
+            id: number;
+            organizationId: number;
+            userId: number | null;
+            credentialId: number | null;
+            action: string;
+            resource: string;
+            details?: unknown;
+            ipAddress: string | null;
+            userAgent: string | null;
+            createdAt: string;
+        };
+        AuditLogListResponse: {
+            data: components["schemas"]["AuditLogResponse"][];
+            meta: {
+                page: number;
+                limit: number;
+                total: number;
+            };
         };
     };
     responses: never;

@@ -8,14 +8,19 @@ import {
   CreateBucketSchema,
   BucketNameParamSchema,
   ListBucketsQuerySchema,
+  BucketListResponseSchema,
+  BucketDetailResponseSchema,
 } from '../validators/storage.validators.js';
-import { UsageHistoryQuerySchema } from '../validators/usage.validators.js';
+import { UsageHistoryQuerySchema, OrganizationUsageResponseSchema, BucketUsageResponseSchema } from '../validators/usage.validators.js';
 import {
   PresignedUploadSchema,
   PresignedDownloadSchema,
   ListObjectsQuerySchema,
   DeleteObjectSchema,
   BatchDeleteObjectsSchema,
+  ListObjectsResponseSchema,
+  PresignedUploadResponseSchema,
+  PresignedDownloadResponseSchema,
 } from '../validators/object.validators.js';
 import { openApiRegistry } from '../config/swagger.js';
 
@@ -29,7 +34,10 @@ openApiRegistry.registerPath({
   tags: ['Storage Usage'],
   security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
   responses: {
-    200: { description: 'Aggregated storage and object count metrics across all buckets' },
+    200: { 
+      description: 'Aggregated storage and object count metrics across all buckets',
+      content: { 'application/json': { schema: OrganizationUsageResponseSchema } }
+    },
   },
 });
 
@@ -43,7 +51,10 @@ openApiRegistry.registerPath({
     query: ListBucketsQuerySchema,
   },
   responses: {
-    200: { description: 'Paginated list of active buckets' },
+    200: { 
+      description: 'Paginated list of active buckets',
+      content: { 'application/json': { schema: BucketListResponseSchema } }
+    },
   },
 });
 
@@ -77,7 +88,10 @@ openApiRegistry.registerPath({
     params: BucketNameParamSchema,
   },
   responses: {
-    200: { description: 'Bucket details' },
+    200: { 
+      description: 'Bucket details',
+      content: { 'application/json': { schema: BucketDetailResponseSchema } }
+    },
     404: { description: 'Bucket not found' },
   },
 });
@@ -108,7 +122,10 @@ openApiRegistry.registerPath({
     query: UsageHistoryQuerySchema,
   },
   responses: {
-    200: { description: 'Bucket usage metrics and snapshot history' },
+    200: { 
+      description: 'Bucket usage metrics and snapshot history',
+      content: { 'application/json': { schema: BucketUsageResponseSchema } }
+    },
     404: { description: 'Bucket not found' },
   },
 });
@@ -143,7 +160,10 @@ openApiRegistry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Presigned upload URL generated successfully' },
+    200: { 
+      description: 'Presigned upload URL generated successfully',
+      content: { 'application/json': { schema: PresignedUploadResponseSchema } }
+    },
     404: { description: 'Bucket not found' },
   },
 });
@@ -163,7 +183,10 @@ openApiRegistry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Presigned download URL generated successfully' },
+    200: { 
+      description: 'Presigned download URL generated successfully',
+      content: { 'application/json': { schema: PresignedDownloadResponseSchema } }
+    },
     404: { description: 'Bucket not found' },
   },
 });
@@ -179,7 +202,10 @@ openApiRegistry.registerPath({
     query: ListObjectsQuerySchema,
   },
   responses: {
-    200: { description: 'List of bucket objects' },
+    200: { 
+      description: 'List of bucket objects',
+      content: { 'application/json': { schema: ListObjectsResponseSchema } }
+    },
     404: { description: 'Bucket not found' },
   },
 });

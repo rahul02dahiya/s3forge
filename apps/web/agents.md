@@ -51,8 +51,7 @@ The most recent major integration focused on the **Authentication Flow**:
 When generating code or suggesting modifications, agents must adhere to the following rules:
 
 1. **Strict Type Safety**: 
-   - Always leverage the auto-generated types from `schema.d.ts` for any API requests or responses. 
-   - If the backend schema changes, run `npm run typegen` to regenerate the types before updating the frontend code.
+   - **Do not manually define API request or response interfaces when the type can be generated from the OpenAPI specification. If a required response type is missing, improve the OpenAPI response schema and regenerate `schema.d.ts` instead of duplicating backend types in the frontend.**
 
 2. **Form Handling & Validation**: 
    - Strictly use `react-hook-form` in combination with `@hookform/resolvers/zod` for all form-based data entry. 
