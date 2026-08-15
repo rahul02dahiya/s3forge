@@ -10,6 +10,7 @@ const DEFAULT_CONSTANTS = {
   SERVER: {
     DEFAULT_PORT: 3000,
     DEFAULT_CORS_ORIGIN: 'http://localhost:5173',
+    DEFAULT_APP_URL: 'http://localhost:5173',
     BODY_LIMIT: '1mb',
     SHUTDOWN_TIMEOUT_MS: 10_000,
     REQUEST_TIMEOUT_MS: 30_000,
@@ -44,6 +45,12 @@ const DEFAULT_CONSTANTS = {
     MAX_OBJECT_LIMIT: 1000,
     DEFAULT_AUDIT_LIMIT: 50,
   },
+  MAIL: {
+    DEFAULT_HOST: 'smtp.gmail.com',
+    DEFAULT_PORT: 587,
+    DEFAULT_SECURE: false,
+    RESET_TOKEN_EXPIRY_SECONDS: 3600,
+  },
 };
 
 export type AppConstants = typeof DEFAULT_CONSTANTS;
@@ -77,6 +84,7 @@ function parseJsonFile(filePath: string): AppConstants {
           : DEFAULT_CONSTANTS.STORAGE.BUCKET_NAME_REGEX,
       },
       PAGINATION: { ...DEFAULT_CONSTANTS.PAGINATION, ...parsed.PAGINATION },
+      MAIL: { ...DEFAULT_CONSTANTS.MAIL, ...parsed.MAIL },
     };
   } catch {
     return DEFAULT_CONSTANTS;
@@ -90,6 +98,7 @@ export const constants: AppConstants = {
   AUTH: { ...DEFAULT_CONSTANTS.AUTH },
   STORAGE: { ...DEFAULT_CONSTANTS.STORAGE },
   PAGINATION: { ...DEFAULT_CONSTANTS.PAGINATION },
+  MAIL: { ...DEFAULT_CONSTANTS.MAIL },
 };
 
 // Initial synchronous load
