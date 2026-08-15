@@ -10,6 +10,7 @@
     "dev:web": "pnpm --filter @s3forge/web dev",
     "db:generate": "pnpm --filter @s3forge/database run generate",
     "db:migrate": "pnpm --filter @s3forge/database run migrate",
+    "db:push": "pnpm --filter @s3forge/database run push",
     "db:studio": "pnpm --filter @s3forge/database run studio",
     "test:smtp": "node scripts/test-smtp.js"
   },

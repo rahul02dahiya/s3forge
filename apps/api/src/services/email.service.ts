@@ -60,10 +60,11 @@ export class EmailService {
    */
   async sendPasswordResetEmail(to: string, resetToken: string, displayName?: string): Promise<boolean> {
     const resetUrl = `${env.appUrl}/reset-password?token=${resetToken}`;
+    const expiresInMinutes = Math.round((constants.MAIL.RESET_TOKEN_EXPIRY_SECONDS || 3600) / 60);
     const templateData = renderPasswordResetEmail({
       name: displayName || 'User',
       resetUrl,
-      expiresInMinutes: 60,
+      expiresInMinutes,
     });
 
     return this.sendMail({
