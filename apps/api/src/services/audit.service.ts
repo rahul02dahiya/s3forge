@@ -18,7 +18,11 @@ export class AuditService {
    */
   async recordAudit(params: AuditEventParams): Promise<void> {
     try {
-      const orgId = params.organizationId ?? params.req?.organizationId ?? 1;
+      const orgId = params.organizationId ?? params.req?.organizationId;
+      if (!orgId) {
+        logger.warn({ action: params.action }, 'Skipping audit log record: missing organizationId context');
+        return;
+      }
       const userId = params.userId ?? params.req?.user?.userId;
       const ipAddress = params.req?.ip || (params.req?.headers['x-forwarded-for'] as string) || undefined;
       const userAgent = params.req?.headers['user-agent'] as string | undefined;
@@ -47,7 +51,7 @@ export class AuditService {
    * Retrieve paginated audit logs for an organization.
    */
   async listAuditLogs(
-    organizationId: number = 1,
+    organizationId: number,
     page: number = 1,
     limit: number = 50,
     actionFilter?: string,

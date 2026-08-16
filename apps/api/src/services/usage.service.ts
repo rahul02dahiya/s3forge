@@ -8,7 +8,7 @@ export class UsageService {
   /**
    * Recalculate usage statistics for a bucket by scanning object metadata in MinIO.
    */
-  async recalculateBucketUsage(bucketName: string, organizationId: number = 1) {
+  async recalculateBucketUsage(bucketName: string, organizationId: number) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
@@ -52,7 +52,7 @@ export class UsageService {
   /**
    * Get usage metrics and snapshot history for a specific bucket.
    */
-  async getBucketUsage(bucketName: string, organizationId: number = 1, limit: number = 30) {
+  async getBucketUsage(bucketName: string, organizationId: number, limit: number = 30) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
@@ -90,7 +90,7 @@ export class UsageService {
   /**
    * Get aggregated organization-wide storage usage metrics across all buckets.
    */
-  async getOrganizationUsage(organizationId: number = 1) {
+  async getOrganizationUsage(organizationId: number) {
     const buckets = await bucketRepository.findAllByOrganization(organizationId);
     const bucketIds = buckets.map((b) => b.id);
 
