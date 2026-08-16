@@ -1,5 +1,6 @@
 import { pgTable, bigint, text, timestamp, boolean, bigserial } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations.js';
+import { users } from './users.js';
 
 export const buckets = pgTable('buckets', {
     
@@ -8,6 +9,9 @@ export const buckets = pgTable('buckets', {
   organizationId: bigint('organization_id', { mode: 'number' })
     .notNull()
     .references(() => organizations.id, { onDelete: 'cascade' }),
+
+  createdBy: bigint('created_by', { mode: 'number' })
+    .references(() => users.id, { onDelete: 'set null' }),
 
   name: text('name').notNull(),
 

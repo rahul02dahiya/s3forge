@@ -159,28 +159,29 @@ Stores **metadata about MinIO buckets**.
 
 ### Columns
 
-| Column            | Type        | Notes                             |
-| ----------------- | ----------- | --------------------------------- |
-| id                | bigint      | Auto-increment primary key        |
-| organization_id   | bigint      | FK → organizations.id             |
-| name              | text        | User-facing bucket name           |
-| minio_bucket_name | text        | Actual MinIO bucket name (unique) |
-| region            | text        | Default: us-east-1                |
-| visibility        | text        | private / public                  |
-| quota_bytes       | bigint      | Optional storage quota            |
-| is_deleted        | boolean     | Soft delete flag                  |
-| created_at        | timestamptz | Creation timestamp                |
-| updated_at        | timestamptz | Last update timestamp             |
+| Column            | Type        | Notes                                          |
+| ----------------- | ----------- | ---------------------------------------------- |
+| id                | bigint      | Auto-increment primary key                     |
+| organization_id   | bigint      | FK → organizations.id                          |
+| created_by        | bigint      | FK → users.id (Creator member)                 |
+| name              | text        | User-facing bucket name                        |
+| minio_bucket_name | text        | MinIO folder prefix path (<org>/u<uid>/<name>) |
+| region            | text        | Default: us-east-1                             |
+| visibility        | text        | private / public                               |
+| quota_bytes       | bigint      | Optional storage quota                         |
+| is_deleted        | boolean     | Soft delete flag                               |
+| created_at        | timestamptz | Creation timestamp                             |
+| updated_at        | timestamptz | Last update timestamp                          |
 
 ### Important
 
-`name` and `minio_bucket_name` are intentionally separate to avoid global naming collisions.
+`name` and `minio_bucket_name` are intentionally separate to store the MinIO key prefix path (`<org-slug>/u<user-id>/<bucket-name>`) for multi-tenant isolation.
 
 Example:
 
 | name   | minio_bucket_name |
 | ------ | ----------------- |
-| assets | org1-assets       |
+| assets | acme-corp/u12/assets |
 
 ---
 

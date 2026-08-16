@@ -146,6 +146,14 @@
 ### Phase 6 — Background Worker & Server Lifecycle
 - [x] Periodic `SnapshotWorker` for usage snapshots with server startup & shutdown handlers.
 
+### Phase 7 — Multi-Tenant Isolation & Organization ACL Hierarchy (COMPLETED)
+- [x] Added `createdBy` column referencing `users.id` to `buckets` database schema & migration `0003_add_created_by_to_buckets.sql`.
+- [x] Configured `ROOT_BUCKET_NAME = 's3forge-storage'` in `@s3forge/config`.
+- [x] Implemented Folder Plan architecture (`<org-slug>/u<user-id>/<bucket-name>/<object-name>`) in `StorageService` and `ObjectService`.
+- [x] Enforced mandatory authentication (`authenticate()`) on all storage, object, usage, and audit routes.
+- [x] Refactored `StorageController`, `ObjectController`, `UsageController`, and `AuditController` to strictly require `req.organizationId` and eliminate fallback defaults.
+- [x] Implemented `requireRole()` RBAC middleware restricting administrative actions (bucket creation/deletion, audit logs) to `owner` and `admin` roles.
+
 ---
 
 ## 4. Guidelines for Handoff Agents & Developers

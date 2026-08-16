@@ -4,6 +4,7 @@ export interface AuthenticatedUser {
   userId: number;
   email: string;
   organizationId: number;
+  role?: string;
 }
 
 declare global {

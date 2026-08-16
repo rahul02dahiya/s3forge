@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { auditService } from '../services/audit.service.js';
 import { sendSuccess } from '../lib/response.js';
+import { AppError } from '../lib/app-error.js';
 import type { ListAuditLogsQueryInput } from '../validators/audit.validators.js';
 
 export class AuditController {
@@ -9,7 +10,10 @@ export class AuditController {
    */
   async listAuditLogs(req: Request, res: Response): Promise<void> {
     const query = req.query as unknown as ListAuditLogsQueryInput;
-    const orgId = req.organizationId ?? 1;
+    const orgId = req.organizationId;
+    if (!orgId) {
+      throw AppError.unauthorized('Organization contextual scope required');
+    }
 
     const result = await auditService.listAuditLogs(orgId, query.page, query.limit, query.action);
 

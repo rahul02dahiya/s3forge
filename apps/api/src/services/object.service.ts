@@ -11,29 +11,40 @@ import type {
   ListObjectsQueryInput,
 } from '../validators/object.validators.js';
 
+const ROOT_BUCKET = constants.STORAGE.ROOT_BUCKET_NAME || 's3forge-storage';
+
 export class ObjectService {
+  /**
+   * Helper to build full object key prefix in MinIO.
+   */
+  private getFullObjectKey(minioBucketName: string, objectName: string): string {
+    const cleanObject = objectName.startsWith('/') ? objectName.substring(1) : objectName;
+    return `${minioBucketName}/${cleanObject}`;
+  }
+
   /**
    * Generate a presigned PUT URL for direct client S3 upload.
    */
   async generatePresignedUploadUrl(
     bucketName: string,
     input: PresignedUploadInput,
-    organizationId: number = 1,
+    organizationId: number,
   ) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
+    const fullKey = this.getFullObjectKey(bucket.minioBucketName, input.objectName);
     const expirySeconds = input.expirySeconds ?? constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS;
     const uploadUrl = await minioService.presignedPutObject(
-      bucket.minioBucketName,
-      input.objectName,
+      ROOT_BUCKET,
+      fullKey,
       expirySeconds,
     );
 
     logger.debug(
-      { bucketName, objectName: input.objectName, expirySeconds },
+      { bucketName, objectName: input.objectName, fullKey, expirySeconds },
       'Generated presigned upload URL',
     );
 
@@ -62,22 +73,23 @@ export class ObjectService {
   async generatePresignedDownloadUrl(
     bucketName: string,
     input: PresignedDownloadInput,
-    organizationId: number = 1,
+    organizationId: number,
   ) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
+    const fullKey = this.getFullObjectKey(bucket.minioBucketName, input.objectName);
     const expirySeconds = input.expirySeconds ?? constants.STORAGE.DEFAULT_PRESIGNED_EXPIRY_SECONDS;
     const downloadUrl = await minioService.presignedGetObject(
-      bucket.minioBucketName,
-      input.objectName,
+      ROOT_BUCKET,
+      fullKey,
       expirySeconds,
     );
 
     logger.debug(
-      { bucketName, objectName: input.objectName, expirySeconds },
+      { bucketName, objectName: input.objectName, fullKey, expirySeconds },
       'Generated presigned download URL',
     );
 
@@ -106,14 +118,15 @@ export class ObjectService {
   async listObjects(
     bucketName: string,
     query: ListObjectsQueryInput,
-    organizationId: number = 1,
+    organizationId: number,
   ) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    const prefix = query.prefix ?? '';
+    const userPrefix = query.prefix ?? '';
+    const fullPrefix = `${bucket.minioBucketName}/${userPrefix}`;
     const recursive = query.recursive ?? true;
     const limit = query.limit ?? constants.PAGINATION.DEFAULT_OBJECT_LIMIT;
 
@@ -125,11 +138,14 @@ export class ObjectService {
     }> = [];
 
     try {
-      const stream = minio.listObjectsV2(bucket.minioBucketName, prefix, recursive);
+      const stream = minio.listObjectsV2(ROOT_BUCKET, fullPrefix, recursive);
+      const prefixLength = `${bucket.minioBucketName}/`.length;
+
       for await (const item of stream) {
         if (item && item.name) {
+          const relativeName = item.name.substring(prefixLength);
           objectsList.push({
-            name: item.name,
+            name: relativeName,
             size: item.size || 0,
             etag: item.etag || '',
             lastModified: item.lastModified || null,
@@ -141,12 +157,12 @@ export class ObjectService {
         }
       }
     } catch (error: any) {
-      logger.warn({ bucketName, err: error }, 'Failed to list objects in MinIO container');
+      logger.warn({ bucketName, err: error }, 'Failed to list objects in MinIO storage');
     }
 
     return {
       bucketName,
-      prefix,
+      prefix: userPrefix,
       totalCount: objectsList.length,
       objects: objectsList,
     };
@@ -155,13 +171,15 @@ export class ObjectService {
   /**
    * Retrieve metadata for a single object.
    */
-  async getObjectMetadata(bucketName: string, objectName: string, organizationId: number = 1) {
+  async getObjectMetadata(bucketName: string, objectName: string, organizationId: number) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    const stat = await minioService.statObject(bucket.minioBucketName, objectName);
+    const fullKey = this.getFullObjectKey(bucket.minioBucketName, objectName);
+    const stat = await minioService.statObject(ROOT_BUCKET, fullKey);
+
     return {
       bucketName,
       objectName,
@@ -176,15 +194,16 @@ export class ObjectService {
   /**
    * Delete a single object from a bucket.
    */
-  async deleteObject(bucketName: string, objectName: string, organizationId: number = 1) {
+  async deleteObject(bucketName: string, objectName: string, organizationId: number) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    await minioService.removeObject(bucket.minioBucketName, objectName);
+    const fullKey = this.getFullObjectKey(bucket.minioBucketName, objectName);
+    await minioService.removeObject(ROOT_BUCKET, fullKey);
 
-    logger.info({ bucketName, objectName }, 'Deleted object from storage bucket');
+    logger.info({ bucketName, objectName, fullKey }, 'Deleted object from storage bucket');
 
     auditService
       .recordAudit({
@@ -205,14 +224,15 @@ export class ObjectService {
   async batchDeleteObjects(
     bucketName: string,
     objectNames: string[],
-    organizationId: number = 1,
+    organizationId: number,
   ) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    await minioService.removeObjects(bucket.minioBucketName, objectNames);
+    const fullKeys = objectNames.map((n) => this.getFullObjectKey(bucket.minioBucketName, n));
+    await minioService.removeObjects(ROOT_BUCKET, fullKeys);
 
     logger.info(
       { bucketName, deletedCount: objectNames.length },

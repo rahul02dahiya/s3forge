@@ -275,7 +275,7 @@ curl -X POST http://localhost:3000/api/v1/storage/buckets \
   "data": {
     "id": 1,
     "name": "app-backups",
-    "minioBucketName": "org1-app-backups",
+    "minioBucketName": "acme-cloud-corp/u1/app-backups",
     "region": "us-east-1",
     "visibility": "private"
   }
@@ -370,7 +370,7 @@ curl -X POST http://localhost:3000/api/v1/storage/buckets/app-backups/objects/pr
   "status": "success",
   "message": "Presigned upload URL generated successfully",
   "data": {
-    "uploadUrl": "http://127.0.0.1:9000/org1-app-backups/documents/report.pdf?X-Amz-Algorithm=...",
+    "uploadUrl": "http://127.0.0.1:9000/s3forge-storage/acme-cloud-corp/u1/app-backups/documents/report.pdf?X-Amz-Algorithm=...",
     "bucketName": "app-backups",
     "objectName": "documents/report.pdf",
     "expirySeconds": 3600

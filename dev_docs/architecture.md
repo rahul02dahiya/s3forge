@@ -32,28 +32,31 @@ HTTP Request
 - **Role**: Intercepts requests before controllers execute. Checks `req.body`, `req.query`, and `req.params` against Zod schemas.
 - **Responsibility**: If validation fails, it immediately aborts the request and returns a standardized 400 error response detailing which fields failed validation.
 
-### 3. Authentication & Security Middleware (`apps/api/src/middleware/authenticate.ts`)
-- **Location**: `apps/api/src/middleware/authenticate.ts`, `apps/api/src/lib/password.ts`, `apps/api/src/lib/jwt.ts`
-- **Role**: Identity verification and access authorization.
-- **Responsibility**: Supports dual authentication methods:
-  - **JWT Bearer Token**: Evaluates `Authorization: Bearer <token>` header for user dashboard access.
+### 3. Authentication & RBAC Security Middleware (`apps/api/src/middleware/`)
+- **Location**: `apps/api/src/middleware/authenticate.ts`, `apps/api/src/middleware/authorize.ts`, `apps/api/src/lib/jwt.ts`
+- **Role**: Identity verification, organization context enforcement, and role-based authorization.
+- **Responsibility**: Supports dual authentication methods and role checks:
+  - **JWT Bearer Token**: Evaluates `Authorization: Bearer <token>` header for user dashboard access (attaches `userId`, `email`, `organizationId`, and `role` to `req.user`).
   - **S3 Access Key Header**: Evaluates `X-S3Forge-Access-Key` header for programmatic API access.
-  Populates `req.user` and `req.organizationId` on the Express Request object.
+  - **RBAC Enforcement**: `requireRole(['owner', 'admin'])` gates administrative bucket lifecycle operations and audit log access based on `organization_members.role`.
 
 ### 4. Controller Layer (`apps/api/src/controllers/`)
 - **Location**: `apps/api/src/controllers/` (`auth.controller.ts`, `storage.controller.ts`, `credential.controller.ts`, `usage.controller.ts`, `audit.controller.ts`, `object.controller.ts`, `health.controller.ts`)
 - **Role**: Thin HTTP orchestration layer.
-- **Responsibility**: Extracts validated input from the request, calls the appropriate service method, and formats the result into standard JSON success envelopes (`sendSuccess` helper in `apps/api/src/lib/response.ts`). Controllers contain no SQL or direct MinIO calls.
+- **Responsibility**: Extracts validated input, strictly enforces non-nullable `req.organizationId` context, calls service methods, and formats responses into standard JSON envelopes (`sendSuccess`).
 
 ### 5. Service Layer (`apps/api/src/services/`)
 - **Location**: `apps/api/src/services/` (`auth.service.ts`, `email.service.ts`, `storage.service.ts`, `credential.service.ts`, `usage.service.ts`, `audit.service.ts`, `object.service.ts`)
-- **Role**: Core business logic, transactional email delivery, storage scans, presigned URL generation, and non-blocking audit event emitting.
-- **Responsibility**: Implements domain rules such as organization-prefixing bucket names, generating S3 keypairs with timing-safe SHA-256 secret hashing, generating S3 presigned upload/download URLs, rendering transactional HTML email templates (`apps/api/src/templates/email/` base template, password resets, welcome emails), and triggering non-blocking audit logs for state changes.
+- **Role**: Business logic, storage isolation, presigned URL generation, and non-blocking audit events.
+- **Responsibility**: Implements domain rules:
+  - **MinIO Folder Isolation**: Stores all tenant objects under root MinIO bucket `s3forge-storage` using structured key prefixes (`<org-slug>/u<user-id>/<bucket-name>/<object-key>`) so MinIO Console 9001 displays a clean organizational folder tree.
+  - **Data Plane Operations**: Generates presigned S3 upload/download URLs and executes object listings, stats, and batch deletions against `s3forge-storage` while stripping key prefixes for user transparency.
+  - **Audit Logging**: Non-blocking asynchronous audit event recording (`auditService.recordAudit()`).
 
 ### 6. Repository Layer (`apps/api/src/repositories/`)
 - **Location**: `apps/api/src/repositories/` (`user.repository.ts`, `bucket.repository.ts`, `s3-credential.repository.ts`, `usage-snapshot.repository.ts`, `audit-log.repository.ts`)
 - **Role**: Pure data access abstraction over Drizzle ORM.
-- **Responsibility**: Executes SQL queries against PostgreSQL tables (`users`, `organizations`, `organization_members`, `buckets`, `s3_credentials`, `usage_snapshots`, `audit_logs`). Handles SHA-256 password reset token hash storage, pagination math, organization filtering, and soft-delete filtering.
+- **Responsibility**: Executes SQL queries against PostgreSQL tables (`users`, `organizations`, `organization_members`, `buckets` with `createdBy`, `s3_credentials`, `usage_snapshots`, `audit_logs`). Strictly filters all queries by `organizationId`.
 
 ### 7. MinIO Storage Client Wrapper (`apps/api/src/lib/minio-client.ts`)
 - **Location**: `apps/api/src/lib/minio-client.ts`

@@ -4,6 +4,7 @@ import { eq, and, count } from 'drizzle-orm';
 
 export interface CreateBucketParams {
   organizationId: number;
+  createdBy?: number;
   name: string;
   minioBucketName: string;
   region?: string;
@@ -98,6 +99,7 @@ export class BucketRepository {
       .insert(buckets)
       .values({
         organizationId: params.organizationId,
+        createdBy: params.createdBy,
         name: params.name,
         minioBucketName: params.minioBucketName,
         region: params.region ?? 'us-east-1',

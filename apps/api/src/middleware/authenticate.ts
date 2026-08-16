@@ -25,6 +25,7 @@ export function authenticate(options: AuthenticateOptions = {}) {
             userId: payload.userId,
             email: payload.email,
             organizationId: payload.organizationId,
+            role: payload.role,
           };
           req.organizationId = payload.organizationId;
           return next();
