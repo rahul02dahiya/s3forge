@@ -53,3 +53,37 @@ export const LoginSchema = z
   .openapi('LoginInput');
 
 export type LoginInput = z.infer<typeof LoginSchema>;
+
+/**
+ * Zod schema for forgot password request.
+ */
+export const ForgotPasswordSchema = z
+  .object({
+    email: z
+      .string()
+      .email('Invalid email address')
+      .transform((val) => val.toLowerCase().trim())
+      .openapi({ description: 'User email address', example: 'dev@s3forge.org' }),
+  })
+  .openapi('ForgotPasswordInput');
+
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
+
+/**
+ * Zod schema for completing password reset.
+ */
+export const ResetPasswordSchema = z
+  .object({
+    token: z
+      .string()
+      .min(1, 'Reset token is required')
+      .openapi({ description: 'Password reset token from email link', example: 'a1b2c3d4e5f6...' }),
+    newPassword: z
+      .string()
+      .min(8, 'New password must be at least 8 characters long')
+      .max(100, 'Password cannot exceed 100 characters')
+      .openapi({ description: 'New password', example: 'NewSecurePassword123!' }),
+  })
+  .openapi('ResetPasswordInput');
+
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;

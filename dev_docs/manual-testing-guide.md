@@ -124,6 +124,67 @@ curl -X GET http://localhost:3000/api/v1/auth/me \
 
 ---
 
+#### 4. Forgot Password Request (`POST /api/v1/auth/forgot-password`)
+Triggers an email with a 32-byte secure password reset token URL. Rate limited to 3 requests per 15 minutes per IP.
+
+**cURL Request:**
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "developer@s3forge.dev"
+  }'
+```
+
+**Expected Response (200 OK):**
+```json
+{
+  "status": "success",
+  "message": "If an account with that email address exists, a password reset link has been sent."
+}
+```
+
+---
+
+#### 5. Complete Password Reset (`POST /api/v1/auth/reset-password`)
+Resets user password using the unhashed token sent to the user's email address. Rate limited to 5 attempts per 15 minutes per IP.
+
+**cURL Request:**
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "RAW_TOKEN_FROM_EMAIL",
+    "newPassword": "NewSecurePassword123!"
+  }'
+```
+
+**Expected Response (200 OK):**
+```json
+{
+  "status": "success",
+  "message": "Password has been reset successfully. You can now log in with your new password."
+}
+```
+
+---
+
+#### 6. SMTP Service Diagnostics & Email Template Verification (CLI Tool)
+Test SMTP server connectivity and verify HTML email templates directly from the CLI:
+
+```bash
+# Test Password Reset Email Template (default)
+pnpm run test:smtp developer@s3forge.dev reset
+
+# Test Account Welcome Email Template
+pnpm run test:smtp developer@s3forge.dev welcome
+
+# Test ALL Templates in a single execution
+pnpm run test:smtp developer@s3forge.dev all
+```
+
+---
+
 ### Phase 3: S3 Credentials Keypair Management
 
 #### 1. Create S3 Keypair (`POST /api/v1/credentials`)

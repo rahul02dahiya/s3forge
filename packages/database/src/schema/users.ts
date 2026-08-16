@@ -12,6 +12,10 @@ export const users = pgTable("users", {
 
   isActive: boolean("is_active").default(true).notNull(),
 
+  resetTokenHash: text("reset_token_hash"),
+
+  resetTokenExpiresAt: timestamp("reset_token_expires_at", { withTimezone: true }),
+
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

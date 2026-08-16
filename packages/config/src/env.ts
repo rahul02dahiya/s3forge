@@ -36,6 +36,10 @@ export const env = {
 
   port: Number(process.env.PORT || constants.SERVER.DEFAULT_PORT),
 
+  corsOrigin: process.env.CORS_ORIGIN || constants.SERVER.DEFAULT_CORS_ORIGIN,
+
+  appUrl: process.env.APP_URL || constants.SERVER.DEFAULT_APP_URL,
+
   jwtSecret: isProduction
     ? required('JWT_SECRET')
     : process.env.JWT_SECRET || 'super-secret-default-s3forge-key-change-in-production',
@@ -56,6 +60,12 @@ export const env = {
     rootPassword: required('MINIO_ROOT_PASSWORD'),
     accessKey: process.env.MINIO_SERVICE_ACCESS_KEY || process.env.MINIO_ROOT_USER || '',
     secretKey: process.env.MINIO_SERVICE_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || '',
+  },
+
+  smtp: {
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || 'S3Forge <no-reply@s3forge.local>',
   },
 };
 
