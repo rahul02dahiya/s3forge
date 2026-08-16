@@ -20,7 +20,7 @@ export class CredentialService {
    * Note: The raw secretKey is returned in the result object ONCE. It is stored as a hash in DB.
    */
   async createCredential(
-    organizationId: number = 1,
+    organizationId: number,
     description?: string,
   ): Promise<CreatedCredentialResult> {
     const accessKey = generateAccessKey();
@@ -59,7 +59,7 @@ export class CredentialService {
   /**
    * List paginated S3 credentials for an organization.
    */
-  async listCredentials(organizationId: number = 1, page: number = 1, limit: number = 20) {
+  async listCredentials(organizationId: number, page: number = 1, limit: number = 20) {
     const result = await s3CredentialRepository.findPaginatedByOrganization(
       organizationId,
       page,
@@ -80,7 +80,7 @@ export class CredentialService {
   /**
    * Get credential details by ID.
    */
-  async getCredentialById(id: number, organizationId: number = 1) {
+  async getCredentialById(id: number, organizationId: number) {
     const credential = await s3CredentialRepository.findById(id, organizationId);
     if (!credential) {
       throw AppError.notFound('Credential not found');
@@ -93,7 +93,7 @@ export class CredentialService {
   /**
    * Toggle (enable or revoke) credential status.
    */
-  async toggleCredentialStatus(id: number, organizationId: number = 1, isActive: boolean = false) {
+  async toggleCredentialStatus(id: number, organizationId: number, isActive: boolean = false) {
     const updated = await s3CredentialRepository.updateStatus(id, organizationId, isActive);
     if (!updated) {
       throw AppError.notFound('Credential not found');
@@ -120,7 +120,7 @@ export class CredentialService {
   /**
    * Delete an S3 credential.
    */
-  async deleteCredential(id: number, organizationId: number = 1) {
+  async deleteCredential(id: number, organizationId: number) {
     const deleted = await s3CredentialRepository.delete(id, organizationId);
     if (!deleted) {
       throw AppError.notFound('Credential not found');

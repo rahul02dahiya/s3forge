@@ -29,8 +29,9 @@ export class StorageService {
   /**
    * Constructs internal unique MinIO object prefix path: <org-slug>/u<userId>/<bucketName>
    */
-  private buildMinioPrefix(orgSlug: string, userId: number, bucketName: string): string {
-    return `${orgSlug}/u${userId}/${bucketName}`;
+  private buildMinioPrefix(orgSlug: string, userId: number | undefined, bucketName: string): string {
+    const userPart = userId ? `u${userId}` : 'shared';
+    return `${orgSlug}/${userPart}/${bucketName}`;
   }
 
   /**
@@ -39,7 +40,7 @@ export class StorageService {
   async createBucket(
     input: CreateBucketInput,
     organizationId: number,
-    userId: number,
+    userId?: number,
   ): Promise<BucketRecord> {
     const { name, region = 'us-east-1', visibility = 'private', quotaBytes = 0 } = input;
 
@@ -84,7 +85,7 @@ export class StorageService {
         resourceId: String(createdRecord.id),
         metadata: { name, minioBucketName: minioBucketPrefix, region, visibility },
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return createdRecord;
   }
@@ -95,7 +96,7 @@ export class StorageService {
   async listBuckets(
     page: number = 1,
     limit: number = 20,
-    organizationId: number = 1,
+    organizationId: number,
   ): Promise<{ data: BucketRecord[]; meta: { page: number; limit: number; total: number } }> {
     const offset = (page - 1) * limit;
 
@@ -163,7 +164,7 @@ export class StorageService {
         resourceId: String(bucket.id),
         metadata: { name, minioBucketName: bucket.minioBucketName },
       })
-      .catch(() => {});
+      .catch(() => { });
   }
 }
 

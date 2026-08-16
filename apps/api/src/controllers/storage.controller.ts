@@ -21,9 +21,9 @@ export class StorageController {
    */
   async createBucket(req: Request, res: Response): Promise<void> {
     const orgId = this.getOrgId(req);
-    const userId = req.user?.userId ?? 1;
+    const userId = req.user?.userId;
     const input: CreateBucketInput = req.body;
-    const bucket = await storageService.createBucket(input, orgId, userId);
+    const bucket = await storageService.createBucket(input, orgId, userId!);
 
     sendSuccess(res, bucket, 'Bucket created successfully', 201);
   }

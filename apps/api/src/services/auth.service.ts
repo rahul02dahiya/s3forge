@@ -53,7 +53,7 @@ export class AuthService {
       resourceType: 'user',
       resourceId: String(user.id),
       metadata: { email: user.email, displayName: user.displayName },
-    }).catch(() => {});
+    }).catch(() => { });
 
     return {
       user: {
@@ -86,8 +86,11 @@ export class AuthService {
     }
 
     const org = await userRepository.getUserOrganization(user.id);
-    const organizationId = org?.organizationId ?? 1;
-    const role = org?.role ?? 'owner';
+    if (!org) {
+      throw AppError.forbidden('User account is not associated with any organization');
+    }
+    const organizationId = org.organizationId;
+    const role = org.role;
 
     const token = signJwt({
       userId: user.id,
@@ -107,7 +110,7 @@ export class AuthService {
       resourceType: 'user',
       resourceId: String(user.id),
       metadata: { email: user.email },
-    }).catch(() => {});
+    }).catch(() => { });
 
     return {
       user: {
@@ -209,7 +212,7 @@ export class AuthService {
         action: 'user.password_reset',
         resourceType: 'user',
         resourceId: String(user.id),
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     return {

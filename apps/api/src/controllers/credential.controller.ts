@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { credentialService } from '../services/credential.service.js';
 import { sendSuccess } from '../lib/response.js';
+import { AppError } from '../lib/app-error.js';
 import type {
   CreateCredentialInput,
   ListCredentialsQueryInput,
@@ -10,12 +11,21 @@ import type {
  * Controller handling S3 credential keypair management.
  */
 export class CredentialController {
+  private getOrgId(req: Request): number {
+    const orgId = req.organizationId;
+    if (!orgId) {
+      throw AppError.unauthorized('Organization contextual scope required');
+    }
+    return orgId;
+  }
+
   /**
    * POST /api/v1/credentials
    */
   async createCredential(req: Request, res: Response): Promise<void> {
+    const orgId = this.getOrgId(req);
     const input: CreateCredentialInput = req.body;
-    const credential = await credentialService.createCredential(1, input.description);
+    const credential = await credentialService.createCredential(orgId, input.description);
 
     sendSuccess(
       res,
@@ -29,8 +39,9 @@ export class CredentialController {
    * GET /api/v1/credentials
    */
   async listCredentials(req: Request, res: Response): Promise<void> {
+    const orgId = this.getOrgId(req);
     const query = req.query as unknown as ListCredentialsQueryInput;
-    const { data, meta } = await credentialService.listCredentials(1, query.page, query.limit);
+    const { data, meta } = await credentialService.listCredentials(orgId, query.page, query.limit);
 
     sendSuccess(res, data, 'Credentials retrieved successfully', 200, meta);
   }
@@ -39,8 +50,9 @@ export class CredentialController {
    * GET /api/v1/credentials/:id
    */
   async getCredential(req: Request, res: Response): Promise<void> {
+    const orgId = this.getOrgId(req);
     const id = Number(req.params.id);
-    const credential = await credentialService.getCredentialById(id, 1);
+    const credential = await credentialService.getCredentialById(id, orgId);
 
     sendSuccess(res, credential, 'Credential retrieved successfully', 200);
   }
@@ -49,8 +61,9 @@ export class CredentialController {
    * PATCH /api/v1/credentials/:id/revoke
    */
   async revokeCredential(req: Request, res: Response): Promise<void> {
+    const orgId = this.getOrgId(req);
     const id = Number(req.params.id);
-    const credential = await credentialService.toggleCredentialStatus(id, 1, false);
+    const credential = await credentialService.toggleCredentialStatus(id, orgId, false);
 
     sendSuccess(res, credential, 'Credential revoked successfully', 200);
   }
@@ -59,8 +72,9 @@ export class CredentialController {
    * DELETE /api/v1/credentials/:id
    */
   async deleteCredential(req: Request, res: Response): Promise<void> {
+    const orgId = this.getOrgId(req);
     const id = Number(req.params.id);
-    await credentialService.deleteCredential(id, 1);
+    await credentialService.deleteCredential(id, orgId);
 
     sendSuccess(res, null, 'Credential deleted successfully', 200);
   }
