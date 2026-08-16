@@ -23,6 +23,10 @@ Endpoints in S3Forge accept two forms of authentication via `apps/api/src/middle
 - In PostgreSQL, only the SHA-256 hash (`secret_key_hash`) is stored.
 - The raw plaintext `secretKey` is returned in the API response **ONLY ONCE** upon initial key generation (`POST /api/v1/credentials`). Subsequent queries (`GET /api/v1/credentials`) return metadata without the secret key.
 
+### 3. Role-Based Access Control (RBAC)
+- All protected storage and audit routes require mandatory authentication (`authenticate()`).
+- Administrative actions (`POST /storage/buckets`, `DELETE /storage/buckets/:name`, `POST /storage/buckets/:name/usage/recalculate`, `GET /audit-logs`) are restricted to users with `owner` or `admin` roles via `requireRole(['owner', 'admin'])`.
+
 ---
 
 ## Response Envelope Conventions
@@ -58,12 +62,12 @@ Interactive API documentation and schema exploration are hosted live by the API 
 
 #### Storage & Usage Operations (`/api/v1/storage`)
 - `GET /api/v1/storage/usage`: Aggregate storage byte totals and object counts for organization.
-- `POST /api/v1/storage/buckets`: Create a new storage bucket (org-prefixed inside MinIO engine).
+- `POST /api/v1/storage/buckets`: Create a new storage bucket (`owner`/`admin` required).
 - `GET /api/v1/storage/buckets`: List organization buckets.
 - `GET /api/v1/storage/buckets/:name`: Get bucket details.
-- `DELETE /api/v1/storage/buckets/:name`: Soft-delete a storage bucket (`is_deleted = true`).
+- `DELETE /api/v1/storage/buckets/:name`: Soft-delete a storage bucket (`owner`/`admin` required).
 - `GET /api/v1/storage/buckets/:name/usage`: Get bucket usage metrics & historical trend.
-- `POST /api/v1/storage/buckets/:name/usage/recalculate`: Recalculate usage snapshot from MinIO storage engine.
+- `POST /api/v1/storage/buckets/:name/usage/recalculate`: Recalculate usage snapshot from MinIO storage engine (`owner`/`admin` required).
 
 #### Object Data-Plane Operations (`/api/v1/storage/buckets/:name/objects`)
 - `POST /api/v1/storage/buckets/:name/objects/presigned-upload`: Generate presigned PUT URL for direct client S3 upload.
@@ -74,15 +78,17 @@ Interactive API documentation and schema exploration are hosted live by the API 
 - `POST /api/v1/storage/buckets/:name/objects/batch-delete`: Batch delete multiple objects.
 
 #### Audit Logging (`/api/v1/audit-logs`)
-- `GET /api/v1/audit-logs`: Get paginated audit trail of organization state changes (`action`, `user_id`, `ip_address`, `resource_type`).
+- `GET /api/v1/audit-logs`: Get paginated audit trail of organization state changes (`owner`/`admin` required).
 
 ---
 
-## Multi-Tenant Storage & Bucket Naming Strategy
+## Multi-Tenant Storage & MinIO Folder Isolation Strategy
 
-1. **User-Facing vs Internal MinIO Name**:
-   - **User-Facing Name**: Unique per organization (e.g., `app-backups`).
-   - **Internal MinIO Name**: Unique globally in MinIO engine (`org1-app-backups`).
-2. **Soft Deletion Policy**:
-   - Deleting a bucket sets `is_deleted = true` in PostgreSQL.
-   - Historical audit logs and usage metrics are preserved while excluding deleted buckets from standard list queries.
+1. **User-Facing Bucket Name vs Internal MinIO Key Prefix**:
+   - **User-Facing Bucket Name**: Unique per organization (e.g., `photos`).
+   - **MinIO Root Bucket**: `s3forge-storage`.
+   - **Internal Object Key Prefix**: `<org-slug>/u<user-id>/<bucket-name>/<object-name>` (e.g., `acme-corp/u12/photos/vacation.png`).
+2. **MinIO Console (Port 9001) Navigation**:
+   - Platform admins browsing port 9001 see a clean folder tree grouped by Organization (`acme-corp/`) $\rightarrow$ User (`u12/`) $\rightarrow$ Bucket (`photos/`).
+3. **Soft Deletion & Prefix Cleanup**:
+   - Deleting a bucket removes all object keys under `<org-slug>/u<user-id>/<bucket-name>/*` from MinIO and marks `is_deleted = true` in PostgreSQL.

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { objectService } from '../services/object.service.js';
 import { sendSuccess } from '../lib/response.js';
+import { AppError } from '../lib/app-error.js';
 import type {
   PresignedUploadInput,
   PresignedDownloadInput,
@@ -10,13 +11,21 @@ import type {
 } from '../validators/object.validators.js';
 
 export class ObjectController {
+  private getOrgId(req: Request): number {
+    const orgId = req.organizationId;
+    if (!orgId) {
+      throw AppError.unauthorized('Organization contextual scope required');
+    }
+    return orgId;
+  }
+
   /**
    * POST /api/v1/storage/buckets/:name/objects/presigned-upload
    */
   async generatePresignedUpload(req: Request, res: Response): Promise<void> {
     const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const input = req.body as PresignedUploadInput;
-    const orgId = req.organizationId ?? 1;
+    const orgId = this.getOrgId(req);
 
     const result = await objectService.generatePresignedUploadUrl(name, input, orgId);
     sendSuccess(res, result, 'Presigned upload URL generated successfully', 200);
@@ -28,7 +37,7 @@ export class ObjectController {
   async generatePresignedDownload(req: Request, res: Response): Promise<void> {
     const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const input = req.body as PresignedDownloadInput;
-    const orgId = req.organizationId ?? 1;
+    const orgId = this.getOrgId(req);
 
     const result = await objectService.generatePresignedDownloadUrl(name, input, orgId);
     sendSuccess(res, result, 'Presigned download URL generated successfully', 200);
@@ -40,7 +49,7 @@ export class ObjectController {
   async listObjects(req: Request, res: Response): Promise<void> {
     const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const query = req.query as unknown as ListObjectsQueryInput;
-    const orgId = req.organizationId ?? 1;
+    const orgId = this.getOrgId(req);
 
     const result = await objectService.listObjects(name, query, orgId);
     sendSuccess(res, result.objects, 'Bucket objects listed successfully', 200, {
@@ -56,7 +65,7 @@ export class ObjectController {
   async getObjectMetadata(req: Request, res: Response): Promise<void> {
     const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const objectName = req.query.objectName as string;
-    const orgId = req.organizationId ?? 1;
+    const orgId = this.getOrgId(req);
 
     const result = await objectService.getObjectMetadata(name, objectName, orgId);
     sendSuccess(res, result, 'Object metadata retrieved successfully', 200);
@@ -68,7 +77,7 @@ export class ObjectController {
   async deleteObject(req: Request, res: Response): Promise<void> {
     const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const input = req.body as DeleteObjectInput;
-    const orgId = req.organizationId ?? 1;
+    const orgId = this.getOrgId(req);
 
     await objectService.deleteObject(name, input.objectName, orgId);
     sendSuccess(res, null, `Object '${input.objectName}' deleted successfully`, 200);
@@ -80,7 +89,7 @@ export class ObjectController {
   async batchDeleteObjects(req: Request, res: Response): Promise<void> {
     const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
     const input = req.body as BatchDeleteObjectsInput;
-    const orgId = req.organizationId ?? 1;
+    const orgId = this.getOrgId(req);
 
     const result = await objectService.batchDeleteObjects(name, input.objectNames, orgId);
     sendSuccess(res, result, 'Batch object deletion completed', 200);

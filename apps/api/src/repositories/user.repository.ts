@@ -50,6 +50,19 @@ export class UserRepository {
   }
 
   /**
+   * Find organization by ID.
+   */
+  async getOrganizationById(organizationId: number) {
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, organizationId))
+      .limit(1);
+
+    return org ?? null;
+  }
+
+  /**
    * Register new user and create their initial organization in a single transaction.
    */
   async createUserWithOrganization(data: CreateUserData, orgName?: string) {

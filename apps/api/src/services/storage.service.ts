@@ -1,95 +1,101 @@
 import { bucketRepository, type BucketRecord } from '../repositories/bucket.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
 import { minioService } from '../lib/minio-client.js';
+import { minio } from '../config/minio.js';
 import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
+import { constants } from '@s3forge/config';
 import type { CreateBucketInput } from '../validators/storage.validators.js';
 
-const DEFAULT_ORGANIZATION_ID = 1;
-const DEFAULT_ORG_PREFIX = 'org1';
+export const ROOT_BUCKET = constants.STORAGE.ROOT_BUCKET_NAME || 's3forge-storage';
 
 export class StorageService {
   /**
-   * Constructs internal unique MinIO bucket name with organization prefix.
+   * Ensure root storage bucket exists in MinIO.
    */
-  private buildMinioBucketName(name: string): string {
-    return `${DEFAULT_ORG_PREFIX}-${name}`;
+  async ensureRootBucket(): Promise<void> {
+    try {
+      const exists = await minioService.bucketExists(ROOT_BUCKET);
+      if (!exists) {
+        await minioService.makeBucket(ROOT_BUCKET, constants.STORAGE.DEFAULT_REGION || 'us-east-1');
+        logger.info({ bucket: ROOT_BUCKET }, `Created root MinIO bucket '${ROOT_BUCKET}'`);
+      }
+    } catch (err) {
+      logger.error({ err, bucket: ROOT_BUCKET }, `Failed to initialize root MinIO bucket '${ROOT_BUCKET}'`);
+    }
   }
 
   /**
-   * Create a new bucket both in MinIO storage and PostgreSQL metadata.
+   * Constructs internal unique MinIO object prefix path: <org-slug>/u<userId>/<bucketName>
    */
-  async createBucket(input: CreateBucketInput, organizationId: number = DEFAULT_ORGANIZATION_ID): Promise<BucketRecord> {
+  private buildMinioPrefix(orgSlug: string, userId: number, bucketName: string): string {
+    return `${orgSlug}/u${userId}/${bucketName}`;
+  }
+
+  /**
+   * Create a new bucket virtual container in MinIO folder hierarchy and PostgreSQL metadata.
+   */
+  async createBucket(
+    input: CreateBucketInput,
+    organizationId: number,
+    userId: number,
+  ): Promise<BucketRecord> {
     const { name, region = 'us-east-1', visibility = 'private', quotaBytes = 0 } = input;
 
     // 1. Check if active bucket record exists in PostgreSQL
     const existingDbRecord = await bucketRepository.findByName(organizationId, name);
     if (existingDbRecord) {
-      throw AppError.conflict(`Bucket with name '${name}' already exists`);
+      throw AppError.conflict(`Bucket with name '${name}' already exists in your organization`);
     }
 
-    const minioBucketName = this.buildMinioBucketName(name);
+    // 2. Fetch Organization slug
+    const org = await userRepository.getOrganizationById(organizationId);
+    const orgSlug = org?.slug ?? `org${organizationId}`;
 
-    // 2. Check if bucket exists directly in MinIO
-    const minioExists = await minioService.bucketExists(minioBucketName);
-    if (minioExists) {
-      throw AppError.conflict(`Storage container '${minioBucketName}' already exists in MinIO engine`);
-    }
+    const minioBucketPrefix = this.buildMinioPrefix(orgSlug, userId, name);
 
-    // 3. Create bucket in MinIO
-    await minioService.makeBucket(minioBucketName, region);
+    // 3. Ensure root MinIO storage bucket exists
+    await this.ensureRootBucket();
 
-    // 4. Persist metadata in PostgreSQL with compensation rollback on DB failure
-    try {
-      const createdRecord = await bucketRepository.create({
+    // 4. Persist metadata in PostgreSQL
+    const createdRecord = await bucketRepository.create({
+      organizationId,
+      createdBy: userId,
+      name,
+      minioBucketName: minioBucketPrefix,
+      region,
+      visibility,
+      quotaBytes,
+    });
+
+    logger.info(
+      { bucketId: createdRecord.id, name, minioBucketName: minioBucketPrefix, organizationId, userId },
+      `Successfully created bucket '${name}' under prefix '${minioBucketPrefix}'`,
+    );
+
+    // Record Audit Event
+    auditService
+      .recordAudit({
         organizationId,
-        name,
-        minioBucketName,
-        region,
-        visibility,
-        quotaBytes,
-      });
-
-      logger.info(
-        { bucketId: createdRecord.id, name, minioBucketName, region },
-        `Successfully created bucket '${name}'`,
-      );
-
-      // Record Audit Event
-      auditService.recordAudit({
-        organizationId,
+        userId,
         action: 'bucket.create',
         resourceType: 'bucket',
         resourceId: String(createdRecord.id),
-        metadata: { name, minioBucketName, region, visibility },
-      }).catch(() => {});
+        metadata: { name, minioBucketName: minioBucketPrefix, region, visibility },
+      })
+      .catch(() => {});
 
-      return createdRecord;
-    } catch (dbError) {
-      // Compensation: remove orphan MinIO bucket if DB record creation failed
-      logger.error(
-        { err: dbError, minioBucketName },
-        `PostgreSQL insert failed for bucket '${name}'. Rolling back MinIO bucket creation.`,
-      );
-      try {
-        await minioService.removeBucket(minioBucketName);
-      } catch (rollbackError) {
-        logger.fatal(
-          { err: rollbackError, minioBucketName },
-          `Compensation rollback failed to delete orphan MinIO bucket '${minioBucketName}'`,
-        );
-      }
-      throw dbError;
-    }
+    return createdRecord;
   }
 
   /**
-   * List paginated active buckets.
+   * List paginated active buckets for an organization.
    */
   async listBuckets(
     page: number = 1,
     limit: number = 20,
-    organizationId: number = DEFAULT_ORGANIZATION_ID,
+    organizationId: number = 1,
   ): Promise<{ data: BucketRecord[]; meta: { page: number; limit: number; total: number } }> {
     const offset = (page - 1) * limit;
 
@@ -110,9 +116,9 @@ export class StorageService {
   }
 
   /**
-   * Retrieve single bucket by name.
+   * Retrieve single bucket by name within organization.
    */
-  async getBucketByName(name: string, organizationId: number = DEFAULT_ORGANIZATION_ID): Promise<BucketRecord> {
+  async getBucketByName(name: string, organizationId: number): Promise<BucketRecord> {
     const bucket = await bucketRepository.findByName(organizationId, name);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${name}' not found`);
@@ -121,23 +127,43 @@ export class StorageService {
   }
 
   /**
-   * Soft-delete a bucket by user name.
+   * Soft-delete a bucket by user name and cleanup MinIO objects under its prefix.
    */
-  async deleteBucketByName(name: string, organizationId: number = DEFAULT_ORGANIZATION_ID): Promise<void> {
+  async deleteBucketByName(name: string, organizationId: number, userId?: number): Promise<void> {
     const bucket = await this.getBucketByName(name, organizationId);
+
+    // Asynchronously delete objects under minioBucketName prefix from MinIO
+    const prefix = `${bucket.minioBucketName}/`;
+    try {
+      const objectsList: string[] = [];
+      const stream = minio.listObjectsV2(ROOT_BUCKET, prefix, true);
+      for await (const obj of stream) {
+        if (obj && obj.name) {
+          objectsList.push(obj.name);
+        }
+      }
+      if (objectsList.length > 0) {
+        await minio.removeObjects(ROOT_BUCKET, objectsList);
+      }
+    } catch (err) {
+      logger.warn({ err, prefix }, `MinIO prefix cleanup during bucket deletion encountered warning`);
+    }
 
     await bucketRepository.softDelete(bucket.id);
 
-    logger.info({ bucketId: bucket.id, name }, `Soft-deleted bucket '${name}'`);
+    logger.info({ bucketId: bucket.id, name, organizationId }, `Soft-deleted bucket '${name}'`);
 
     // Record Audit Event
-    auditService.recordAudit({
-      organizationId,
-      action: 'bucket.delete',
-      resourceType: 'bucket',
-      resourceId: String(bucket.id),
-      metadata: { name, minioBucketName: bucket.minioBucketName },
-    }).catch(() => {});
+    auditService
+      .recordAudit({
+        organizationId,
+        userId,
+        action: 'bucket.delete',
+        resourceType: 'bucket',
+        resourceId: String(bucket.id),
+        metadata: { name, minioBucketName: bucket.minioBucketName },
+      })
+      .catch(() => {});
   }
 }
 

@@ -4,6 +4,7 @@ import { usageController } from '../controllers/usage.controller.js';
 import { objectController } from '../controllers/object.controller.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { requireRole } from '../middleware/authorize.js';
 import {
   CreateBucketSchema,
   BucketNameParamSchema,
@@ -253,48 +254,51 @@ openApiRegistry.registerPath({
 // Route Definitions
 router.get(
   '/usage',
-  authenticate({ optional: true }),
+  authenticate(),
   (req, res, next) => usageController.getOrganizationUsage(req, res).catch(next),
 );
 
 router.get(
   '/buckets',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ query: ListBucketsQuerySchema }),
   (req, res, next) => storageController.listBuckets(req, res).catch(next),
 );
 
 router.post(
   '/buckets',
-  authenticate({ optional: true }),
+  authenticate(),
+  requireRole(['owner', 'admin']),
   validate({ body: CreateBucketSchema }),
   (req, res, next) => storageController.createBucket(req, res).catch(next),
 );
 
 router.get(
   '/buckets/:name',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema }),
   (req, res, next) => storageController.getBucket(req, res).catch(next),
 );
 
 router.delete(
   '/buckets/:name',
-  authenticate({ optional: true }),
+  authenticate(),
+  requireRole(['owner', 'admin']),
   validate({ params: BucketNameParamSchema }),
   (req, res, next) => storageController.deleteBucket(req, res).catch(next),
 );
 
 router.get(
   '/buckets/:name/usage',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema, query: UsageHistoryQuerySchema }),
   (req, res, next) => usageController.getBucketUsage(req, res).catch(next),
 );
 
 router.post(
   '/buckets/:name/usage/recalculate',
-  authenticate({ optional: true }),
+  authenticate(),
+  requireRole(['owner', 'admin']),
   validate({ params: BucketNameParamSchema }),
   (req, res, next) => usageController.recalculateBucketUsage(req, res).catch(next),
 );
@@ -302,42 +306,42 @@ router.post(
 // Object Routes
 router.post(
   '/buckets/:name/objects/presigned-upload',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema, body: PresignedUploadSchema }),
   (req, res, next) => objectController.generatePresignedUpload(req, res).catch(next),
 );
 
 router.post(
   '/buckets/:name/objects/presigned-download',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema, body: PresignedDownloadSchema }),
   (req, res, next) => objectController.generatePresignedDownload(req, res).catch(next),
 );
 
 router.get(
   '/buckets/:name/objects',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema, query: ListObjectsQuerySchema }),
   (req, res, next) => objectController.listObjects(req, res).catch(next),
 );
 
 router.get(
   '/buckets/:name/objects/stat',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema }),
   (req, res, next) => objectController.getObjectMetadata(req, res).catch(next),
 );
 
 router.delete(
   '/buckets/:name/objects',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema, body: DeleteObjectSchema }),
   (req, res, next) => objectController.deleteObject(req, res).catch(next),
 );
 
 router.post(
   '/buckets/:name/objects/batch-delete',
-  authenticate({ optional: true }),
+  authenticate(),
   validate({ params: BucketNameParamSchema, body: BatchDeleteObjectsSchema }),
   (req, res, next) => objectController.batchDeleteObjects(req, res).catch(next),
 );

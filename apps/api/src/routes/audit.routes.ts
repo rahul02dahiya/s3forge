@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { auditController } from '../controllers/audit.controller.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { requireRole } from '../middleware/authorize.js';
 import { 
   ListAuditLogsQuerySchema,
   AuditLogListResponseSchema 
@@ -33,6 +34,7 @@ openApiRegistry.registerPath({
 router.get(
   '/',
   authenticate({ allowAccessKey: false }),
+  requireRole(['owner', 'admin']),
   validate({ query: ListAuditLogsQuerySchema }),
   (req, res, next) => auditController.listAuditLogs(req, res).catch(next),
 );

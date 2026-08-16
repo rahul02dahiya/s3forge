@@ -34,6 +34,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       organizationId: organization.id,
+      role: 'owner',
     });
 
     logger.info({ userId: user.id, organizationId: organization.id }, 'Registered new user');
@@ -86,11 +87,13 @@ export class AuthService {
 
     const org = await userRepository.getUserOrganization(user.id);
     const organizationId = org?.organizationId ?? 1;
+    const role = org?.role ?? 'owner';
 
     const token = signJwt({
       userId: user.id,
       email: user.email,
       organizationId,
+      role,
     });
 
     logger.info({ userId: user.id, organizationId }, 'User logged in successfully');
