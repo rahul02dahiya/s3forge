@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,13 +32,14 @@ export function ForgotPasswordPage() {
     },
   });
 
-  async function onSubmit(_data: ForgotPasswordFormValues) {
+  async function onSubmit(data: ForgotPasswordFormValues) {
     setIsLoading(true);
     try {
-      await requestPasswordReset(); // Simulation
+      await requestPasswordReset(data.email);
       setIsSuccess(true);
-    } catch (error) {
-      // Handle error
+      toast.success("Password reset instructions sent");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to request password reset");
     } finally {
       setIsLoading(false);
     }

@@ -3,6 +3,13 @@ import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { DashboardLayout } from './components/layout/DashboardLayout'
+import { DashboardPage } from './pages/DashboardPage'
+import { BucketsPage } from './pages/BucketsPage'
+import { BucketDetailsPage } from './pages/BucketDetailsPage'
+import { CredentialsPage } from './pages/CredentialsPage'
+import { AuditLogsPage } from './pages/AuditLogsPage'
+import { Toaster } from './components/ui/sonner'
 import './App.css'
 
 function Home() {
@@ -20,15 +27,27 @@ function Home() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          
+          {/* Protected Routes */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/buckets" element={<BucketsPage />} />
+            <Route path="/buckets/:bucketName" element={<BucketDetailsPage />} />
+            <Route path="/credentials" element={<CredentialsPage />} />
+            <Route path="/audit-logs" element={<AuditLogsPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+      <Toaster />
+    </>
   )
 }
 

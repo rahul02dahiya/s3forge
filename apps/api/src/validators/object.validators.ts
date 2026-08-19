@@ -118,3 +118,39 @@ export const BatchDeleteObjectsSchema = z
   .openapi('BatchDeleteObjectsInput');
 
 export type BatchDeleteObjectsInput = z.infer<typeof BatchDeleteObjectsSchema>;
+
+export const ObjectMetadataSchema = z.object({
+  name: z.string(),
+  lastModified: z.date().or(z.string()),
+  size: z.number(),
+  etag: z.string().optional(),
+}).openapi('ObjectMetadata');
+
+export const ListObjectsResponseSchema = z.object({
+  status: z.literal('success'),
+  message: z.string(),
+  data: z.array(ObjectMetadataSchema),
+}).openapi('ListObjectsResponse');
+
+export const PresignedUploadResponseSchema = z.object({
+  status: z.literal('success'),
+  message: z.string(),
+  data: z.object({
+    url: z.string().url(),
+    objectName: z.string(),
+    method: z.literal('PUT'),
+    expiresAt: z.string(),
+  })
+}).openapi('PresignedUploadResponse');
+
+export const PresignedDownloadResponseSchema = z.object({
+  status: z.literal('success'),
+  message: z.string(),
+  data: z.object({
+    url: z.string().url(),
+    objectName: z.string(),
+    method: z.literal('GET'),
+    expiresAt: z.string(),
+  })
+}).openapi('PresignedDownloadResponse');
+

@@ -87,3 +87,37 @@ openApiRegistry.register('ListBucketsQuery', ListBucketsQuerySchema);
 export type CreateBucketInput = z.infer<typeof CreateBucketSchema>;
 export type BucketNameParamInput = z.infer<typeof BucketNameParamSchema>;
 export type ListBucketsQueryInput = z.infer<typeof ListBucketsQuerySchema>;
+
+export const BucketResponseSchema = z.object({
+  id: z.number(),
+  organizationId: z.number(),
+  name: z.string(),
+  minioBucketName: z.string(),
+  region: z.string(),
+  visibility: z.string(),
+  quotaBytes: z.number(),
+  isDeleted: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string()
+}).openapi('Bucket');
+
+export const BucketListResponseSchema = z.object({
+  status: z.literal('success'),
+  message: z.string(),
+  data: z.array(BucketResponseSchema),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number()
+  }).optional()
+}).openapi('BucketListResponse');
+
+export const BucketDetailResponseSchema = z.object({
+  status: z.literal('success'),
+  message: z.string(),
+  data: BucketResponseSchema
+}).openapi('BucketDetailResponse');
+
+openApiRegistry.register('Bucket', BucketResponseSchema);
+openApiRegistry.register('BucketListResponse', BucketListResponseSchema);
+openApiRegistry.register('BucketDetailResponse', BucketDetailResponseSchema);

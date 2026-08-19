@@ -37,3 +37,25 @@ export const ListAuditLogsQuerySchema = z
   .openapi('ListAuditLogsQuery');
 
 export type ListAuditLogsQueryInput = z.infer<typeof ListAuditLogsQuerySchema>;
+
+export const AuditLogResponseSchema = z.object({
+  id: z.number(),
+  organizationId: z.number(),
+  userId: z.number().nullable(),
+  credentialId: z.number().nullable(),
+  action: z.string(),
+  resource: z.string(),
+  details: z.any().nullable(),
+  ipAddress: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  createdAt: z.string(),
+}).openapi('AuditLogResponse');
+
+export const AuditLogListResponseSchema = z.object({
+  data: z.array(AuditLogResponseSchema),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+  }),
+}).openapi('AuditLogListResponse');

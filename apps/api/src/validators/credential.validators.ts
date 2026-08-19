@@ -67,3 +67,31 @@ export const ListCredentialsQuerySchema = z
   .openapi('ListCredentialsQuery');
 
 export type ListCredentialsQueryInput = z.infer<typeof ListCredentialsQuerySchema>;
+
+export const CredentialResponseSchema = z.object({
+  id: z.number(),
+  accessKey: z.string(),
+  description: z.string().nullable(),
+  isActive: z.boolean(),
+  lastUsedAt: z.string().nullable(),
+  createdAt: z.string(),
+}).openapi('CredentialResponse');
+
+export const CredentialWithSecretResponseSchema = z.object({
+  id: z.number(),
+  accessKey: z.string(),
+  secretKey: z.string(),
+  description: z.string().nullable(),
+  isActive: z.boolean(),
+  lastUsedAt: z.string().nullable(),
+  createdAt: z.string(),
+}).openapi('CredentialWithSecretResponse');
+
+export const CredentialListResponseSchema = z.object({
+  data: z.array(CredentialResponseSchema),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+  }),
+}).openapi('CredentialListResponse');
