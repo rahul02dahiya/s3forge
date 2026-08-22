@@ -35,7 +35,7 @@ interface CreateCredentialDialogProps {
 
 export function CreateCredentialDialog({ open, onOpenChange }: CreateCredentialDialogProps) {
   const createCredentialMutation = useCreateCredential();
-  
+
   // Local state to display the newly created credential
   // Explicitly cleared when dialog closes to prevent persistence
   const [createdCredential, setCreatedCredential] = useState<CredentialWithSecretResponse | null>(null);
@@ -67,9 +67,9 @@ export function CreateCredentialDialog({ open, onOpenChange }: CreateCredentialD
         description: data.description || undefined,
       });
 
-      // Show the generated credential
-      if (response) {
-        setCreatedCredential(response);
+      // Show the generated credential from the response data object
+      if (response && response.data) {
+        setCreatedCredential(response.data);
         toast.success('Keypair generated successfully');
       }
     } catch (error: any) {
@@ -95,8 +95,8 @@ export function CreateCredentialDialog({ open, onOpenChange }: CreateCredentialD
         <DialogHeader>
           <DialogTitle>Generate Access Keypair</DialogTitle>
           <DialogDescription>
-            {createdCredential 
-              ? 'Your new keypair has been generated. Please copy your secret key now.' 
+            {createdCredential
+              ? 'Your new keypair has been generated. Please copy your secret key now.'
               : 'Create a new S3 access credential for your applications.'}
           </DialogDescription>
         </DialogHeader>
@@ -105,10 +105,10 @@ export function CreateCredentialDialog({ open, onOpenChange }: CreateCredentialD
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label htmlFor="description">Description (Optional)</Label>
-              <Input 
-                id="description" 
-                placeholder="e.g., CI/CD Deployment Key" 
-                {...form.register("description")} 
+              <Input
+                id="description"
+                placeholder="e.g., CI/CD Deployment Key"
+                {...form.register("description")}
               />
               {form.formState.errors.description && (
                 <p className="text-[0.8rem] font-medium text-destructive">
@@ -146,9 +146,9 @@ export function CreateCredentialDialog({ open, onOpenChange }: CreateCredentialD
                 <Label>Access Key</Label>
                 <div className="flex gap-2">
                   <Input readOnly value={createdCredential.accessKey} className="font-mono bg-muted/50" />
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => copyToClipboard(createdCredential.accessKey, 'access')}
                     className="shrink-0"
                   >
@@ -161,9 +161,9 @@ export function CreateCredentialDialog({ open, onOpenChange }: CreateCredentialD
                 <Label>Secret Key</Label>
                 <div className="flex gap-2">
                   <Input readOnly value={createdCredential.secretKey} className="font-mono bg-muted/50" />
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => copyToClipboard(createdCredential.secretKey, 'secret')}
                     className="shrink-0"
                   >

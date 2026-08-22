@@ -73,6 +73,7 @@ export function SignupPage() {
   return (
     <AuthLayout
       title="Create your S3Forge account"
+      description="Enter your details below to get started with S3Forge."
       className="max-h-[calc(100dvh-32px)]"
     >
       <div className="flex flex-col gap-2">

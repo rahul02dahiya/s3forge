@@ -7,6 +7,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { requireRole } from '../middleware/authorize.js';
 import {
   CreateBucketSchema,
+  UpdateBucketSchema,
   BucketNameParamSchema,
   ListBucketsQuerySchema,
   BucketListResponseSchema,
@@ -93,6 +94,30 @@ openApiRegistry.registerPath({
       description: 'Bucket details',
       content: { 'application/json': { schema: BucketDetailResponseSchema } }
     },
+    404: { description: 'Bucket not found' },
+  },
+});
+
+openApiRegistry.registerPath({
+  method: 'patch',
+  path: '/storage/buckets/{name}',
+  summary: 'Update storage bucket settings (visibility, quota)',
+  tags: ['Storage'],
+  security: [{ bearerAuth: [] }, { s3AccessKeyAuth: [] }],
+  request: {
+    params: BucketNameParamSchema,
+    body: {
+      content: {
+        'application/json': { schema: UpdateBucketSchema },
+      },
+    },
+  },
+  responses: {
+    200: { 
+      description: 'Bucket updated successfully',
+      content: { 'application/json': { schema: BucketDetailResponseSchema } }
+    },
+    400: { description: 'Validation error' },
     404: { description: 'Bucket not found' },
   },
 });
@@ -278,6 +303,14 @@ router.get(
   authenticate(),
   validate({ params: BucketNameParamSchema }),
   (req, res, next) => storageController.getBucket(req, res).catch(next),
+);
+
+router.patch(
+  '/buckets/:name',
+  authenticate(),
+  requireRole(['owner', 'admin']),
+  validate({ params: BucketNameParamSchema, body: UpdateBucketSchema }),
+  (req, res, next) => storageController.updateBucket(req, res).catch(next),
 );
 
 router.delete(

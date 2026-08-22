@@ -42,6 +42,27 @@ export const CreateBucketSchema = z
   })
   .openapi('CreateBucketRequest');
 
+export const UpdateBucketSchema = z
+  .object({
+    visibility: z
+      .enum(['private', 'public'])
+      .optional()
+      .openapi({
+        description: 'Updated bucket access visibility',
+        example: 'public',
+      }),
+    quotaBytes: z
+      .number()
+      .int()
+      .min(0)
+      .optional()
+      .openapi({
+        description: 'Updated storage quota limit in bytes',
+        example: 21474836480,
+      }),
+  })
+  .openapi('UpdateBucketRequest');
+
 export const BucketNameParamSchema = z
   .object({
     name: z
@@ -81,10 +102,12 @@ export const ListBucketsQuerySchema = z
 
 // Register Schemas with OpenAPI Registry
 openApiRegistry.register('CreateBucketRequest', CreateBucketSchema);
+openApiRegistry.register('UpdateBucketRequest', UpdateBucketSchema);
 openApiRegistry.register('BucketNameParam', BucketNameParamSchema);
 openApiRegistry.register('ListBucketsQuery', ListBucketsQuerySchema);
 
 export type CreateBucketInput = z.infer<typeof CreateBucketSchema>;
+export type UpdateBucketInput = z.infer<typeof UpdateBucketSchema>;
 export type BucketNameParamInput = z.infer<typeof BucketNameParamSchema>;
 export type ListBucketsQueryInput = z.infer<typeof ListBucketsQuerySchema>;
 

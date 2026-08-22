@@ -6,7 +6,7 @@ import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
 import { constants } from '@s3forge/config';
-import type { CreateBucketInput } from '../validators/storage.validators.js';
+import type { CreateBucketInput, UpdateBucketInput } from '../validators/storage.validators.js';
 
 export const ROOT_BUCKET = constants.STORAGE.ROOT_BUCKET_NAME || 's3forge-storage';
 
@@ -85,7 +85,7 @@ export class StorageService {
         resourceId: String(createdRecord.id),
         metadata: { name, minioBucketName: minioBucketPrefix, region, visibility },
       })
-      .catch(() => { });
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return createdRecord;
   }
@@ -128,6 +128,43 @@ export class StorageService {
   }
 
   /**
+   * Update settings (visibility, quotaBytes) for an existing bucket.
+   */
+  async updateBucketByName(
+    name: string,
+    organizationId: number,
+    input: UpdateBucketInput,
+    userId?: number,
+  ): Promise<BucketRecord> {
+    const bucket = await this.getBucketByName(name, organizationId);
+
+    const updated = await bucketRepository.update(bucket.id, {
+      visibility: input.visibility,
+      quotaBytes: input.quotaBytes,
+    });
+
+    if (!updated) {
+      throw AppError.internal('Failed to update bucket');
+    }
+
+    logger.info({ bucketId: bucket.id, name, organizationId, input }, `Updated bucket '${name}' settings`);
+
+    // Record Audit Event
+    auditService
+      .recordAudit({
+        organizationId,
+        userId,
+        action: 'bucket.update',
+        resourceType: 'bucket',
+        resourceId: String(bucket.id),
+        metadata: { name, updates: input },
+      })
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
+
+    return updated;
+  }
+
+  /**
    * Soft-delete a bucket by user name and cleanup MinIO objects under its prefix.
    */
   async deleteBucketByName(name: string, organizationId: number, userId?: number): Promise<void> {
@@ -164,7 +201,7 @@ export class StorageService {
         resourceId: String(bucket.id),
         metadata: { name, minioBucketName: bucket.minioBucketName },
       })
-      .catch(() => { });
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
   }
 }
 

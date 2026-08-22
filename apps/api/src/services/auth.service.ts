@@ -53,7 +53,7 @@ export class AuthService {
       resourceType: 'user',
       resourceId: String(user.id),
       metadata: { email: user.email, displayName: user.displayName },
-    }).catch(() => { });
+    }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return {
       user: {
@@ -110,7 +110,7 @@ export class AuthService {
       resourceType: 'user',
       resourceId: String(user.id),
       metadata: { email: user.email },
-    }).catch(() => { });
+    }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return {
       user: {
@@ -212,7 +212,7 @@ export class AuthService {
         action: 'user.password_reset',
         resourceType: 'user',
         resourceId: String(user.id),
-      }).catch(() => { });
+      }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
     }
 
     return {

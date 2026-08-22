@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui
 interface AuthLayoutProps {
   children: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   className?: string;
 }
 
@@ -91,7 +91,9 @@ export function AuthLayout({ children, title, description, className }: AuthLayo
           <Card className={`w-full max-w-[500px] overflow-y-auto bg-card/40 backdrop-blur-md border border-border shadow-xl rounded-2xl relative scrollbar-thin py-2 ${className || "max-h-[calc(100dvh-32px)]"}`}>
             <CardHeader className="text-left space-y-1 pt-5 px-6">
               <CardTitle className="text-[26px] font-semibold tracking-tight text-foreground leading-tight">{title}</CardTitle>
-              <CardDescription className="text-[14px] leading-snug text-muted-foreground">{description}</CardDescription>
+              {description && (
+                <CardDescription className="text-[14px] leading-snug text-muted-foreground">{description}</CardDescription>
+              )}
             </CardHeader>
             <CardContent className="px-6 pb-5">
               {children}

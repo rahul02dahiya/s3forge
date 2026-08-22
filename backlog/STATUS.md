@@ -153,6 +153,10 @@
 - [x] Enforced mandatory authentication (`authenticate()`) on all storage, object, usage, and audit routes.
 - [x] Refactored `StorageController`, `ObjectController`, `UsageController`, and `AuditController` to strictly require `req.organizationId` and eliminate fallback defaults.
 - [x] Implemented `requireRole()` RBAC middleware restricting administrative actions (bucket creation/deletion, audit logs) to `owner` and `admin` roles.
+- [x] Added pagination (`page`, `limit`, `meta`) for storage usage snapshot history in `GET /api/v1/storage/buckets/:name/usage`.
+- [x] Standardized presigned URL response property (`url`) and wrapped secret credentials response payload (`CredentialWithSecretResponseSchema`).
+- [x] Replaced silent audit logging catches with structured Pino logger warnings (`logger.warn`).
+- [x] Synchronized all developer docs (`api-conventions.md`, `manual-testing-guide.md`, `phase7-manual-testing-guide.md`, `overall-testing-guide.md`).
 
 ---
 

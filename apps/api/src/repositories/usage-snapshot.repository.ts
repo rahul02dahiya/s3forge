@@ -1,6 +1,6 @@
 import { db } from '../config/database.js';
 import { usageSnapshots, buckets } from '@s3forge/database';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { eq, desc, inArray, sql } from 'drizzle-orm';
 
 export interface CreateSnapshotData {
   bucketId: number;
@@ -49,6 +49,36 @@ export class UsageSnapshotRepository {
       .where(eq(usageSnapshots.bucketId, bucketId))
       .orderBy(desc(usageSnapshots.calculatedAt))
       .limit(limit);
+  }
+
+  /**
+   * Get paginated snapshot history for a bucket.
+   */
+  async getSnapshotHistoryPaginated(bucketId: number, page: number = 1, limit: number = 30) {
+    const offset = (page - 1) * limit;
+
+    const dataQuery = db
+      .select()
+      .from(usageSnapshots)
+      .where(eq(usageSnapshots.bucketId, bucketId))
+      .orderBy(desc(usageSnapshots.calculatedAt))
+      .limit(limit)
+      .offset(offset);
+
+    const countQuery = db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(usageSnapshots)
+      .where(eq(usageSnapshots.bucketId, bucketId));
+
+    const [data, [{ count }]] = await Promise.all([dataQuery, countQuery]);
+
+    return {
+      data,
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit) || 1,
+    };
   }
 
   /**

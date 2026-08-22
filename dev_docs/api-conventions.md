@@ -66,13 +66,13 @@ Interactive API documentation and schema exploration are hosted live by the API 
 - `GET /api/v1/storage/buckets`: List organization buckets.
 - `GET /api/v1/storage/buckets/:name`: Get bucket details.
 - `DELETE /api/v1/storage/buckets/:name`: Soft-delete a storage bucket (`owner`/`admin` required).
-- `GET /api/v1/storage/buckets/:name/usage`: Get bucket usage metrics & historical trend.
+- `GET /api/v1/storage/buckets/:name/usage`: Get bucket usage metrics & historical trend (supports `page` and `limit` pagination parameters).
 - `POST /api/v1/storage/buckets/:name/usage/recalculate`: Recalculate usage snapshot from MinIO storage engine (`owner`/`admin` required).
 
 #### Object Data-Plane Operations (`/api/v1/storage/buckets/:name/objects`)
-- `POST /api/v1/storage/buckets/:name/objects/presigned-upload`: Generate presigned PUT URL for direct client S3 upload.
-- `POST /api/v1/storage/buckets/:name/objects/presigned-download`: Generate presigned GET URL for temporary file download.
-- `GET /api/v1/storage/buckets/:name/objects`: List objects in a bucket with prefix filtering.
+- `POST /api/v1/storage/buckets/:name/objects/presigned-upload`: Generate presigned PUT URL (`url`) for direct client S3 upload.
+- `POST /api/v1/storage/buckets/:name/objects/presigned-download`: Generate presigned GET URL (`url`) for temporary file download.
+- `GET /api/v1/storage/buckets/:name/objects`: List objects in a bucket with prefix filtering and recursive search (default: `recursive=true`).
 - `GET /api/v1/storage/buckets/:name/objects/stat`: Get metadata for a specific object.
 - `DELETE /api/v1/storage/buckets/:name/objects`: Delete a single object.
 - `POST /api/v1/storage/buckets/:name/objects/batch-delete`: Batch delete multiple objects.

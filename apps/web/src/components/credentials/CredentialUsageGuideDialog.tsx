@@ -99,7 +99,7 @@ curl -H "x-s3forge-access-key: YOUR_ACCESS_KEY" \\
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[720px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-md bg-primary/10 text-primary">
@@ -136,11 +136,10 @@ curl -H "x-s3forge-access-key: YOUR_ACCESS_KEY" \\
                     key={tabKey}
                     type="button"
                     onClick={() => setActiveTab(tabKey)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap flex items-center gap-1.5 ${isSelected
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                      }`}
                   >
                     {tabKey === 'cli' && <Terminal className="h-3.5 w-3.5" />}
                     {tabKey === 'node' && <Code2 className="h-3.5 w-3.5" />}

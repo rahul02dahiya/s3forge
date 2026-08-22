@@ -78,13 +78,17 @@ export const CredentialResponseSchema = z.object({
 }).openapi('CredentialResponse');
 
 export const CredentialWithSecretResponseSchema = z.object({
-  id: z.number(),
-  accessKey: z.string(),
-  secretKey: z.string(),
-  description: z.string().nullable(),
-  isActive: z.boolean(),
-  lastUsedAt: z.string().nullable(),
-  createdAt: z.string(),
+  status: z.literal('success'),
+  message: z.string(),
+  data: z.object({
+    id: z.number(),
+    accessKey: z.string(),
+    secretKey: z.string(),
+    description: z.string().nullable(),
+    isActive: z.boolean(),
+    lastUsedAt: z.string().nullable(),
+    createdAt: z.string(),
+  }),
 }).openapi('CredentialWithSecretResponse');
 
 export const CredentialListResponseSchema = z.object({

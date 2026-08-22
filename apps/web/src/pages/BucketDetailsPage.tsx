@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useBucket, useBucketUsage, useDeleteBucket } from '../hooks/useBuckets';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Database, Trash2, HardDrive, Clock, ShieldAlert } from 'lucide-react';
+import { Database, Trash2, HardDrive, Clock, ShieldAlert, Pencil } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,7 @@ import {
 } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { ObjectBrowser } from '../components/buckets/ObjectBrowser';
+import { EditBucketDialog } from '../components/buckets/EditBucketDialog';
 
 function formatBytes(bytes: number) {
   if (bytes === 0) return '0 B';
@@ -29,6 +30,7 @@ export function BucketDetailsPage() {
   const { bucketName } = useParams<{ bucketName: string }>();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const { data: bucketData, isLoading: isLoadingBucket, isError: isBucketError } = useBucket(bucketName || '');
   const { data: usageData, isLoading: isLoadingUsage } = useBucketUsage(bucketName || '');
@@ -86,14 +88,24 @@ export function BucketDetailsPage() {
             <span>Created on {new Date(bucket.createdAt).toLocaleDateString()}</span>
           </p>
         </div>
-        <Button 
-          variant="destructive" 
-          className="gap-2 self-start sm:self-auto"
-          onClick={() => setIsDeleteDialogOpen(true)}
-        >
-          <Trash2 className="h-4 w-4" />
-          Delete Bucket
-        </Button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsEditOpen(true)}
+          >
+            <Pencil className="h-4 w-4" />
+            Edit Bucket
+          </Button>
+          <Button
+            variant="destructive"
+            className="gap-2"
+            onClick={() => setIsDeleteDialogOpen(true)}
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete Bucket
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -106,7 +118,7 @@ export function BucketDetailsPage() {
             <div className="text-2xl font-bold">{usage?.objectCount ?? 0}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Storage</CardTitle>
@@ -126,7 +138,7 @@ export function BucketDetailsPage() {
             <div className="text-2xl font-bold capitalize">{bucket.visibility}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Status</CardTitle>
@@ -137,7 +149,9 @@ export function BucketDetailsPage() {
           </CardContent>
         </Card>
       </div>
-      
+
+      <ObjectBrowser bucketName={bucket.name} />
+
       <Card>
         <CardHeader>
           <CardTitle>Storage History</CardTitle>
@@ -166,7 +180,7 @@ export function BucketDetailsPage() {
         </CardContent>
       </Card>
 
-      <ObjectBrowser bucketName={bucket.name} />
+      <EditBucketDialog open={isEditOpen} onOpenChange={setIsEditOpen} bucket={bucket} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -178,7 +192,7 @@ export function BucketDetailsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 handleDelete();

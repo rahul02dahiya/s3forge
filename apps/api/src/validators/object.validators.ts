@@ -71,7 +71,7 @@ export const ListObjectsQuerySchema = z
     recursive: z
       .string()
       .optional()
-      .transform((val) => val === 'true')
+      .transform((val) => val !== 'false')
       .openapi({ description: 'Recursively search nested directories (default: true)', example: 'true' }),
     limit: z
       .string()

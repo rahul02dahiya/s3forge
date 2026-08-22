@@ -142,6 +142,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Initiate password reset request by sending email link */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ForgotPasswordInput"];
+                };
+            };
+            responses: {
+                /** @description Password reset email triggered if account exists */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete password reset using valid email reset token */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResetPasswordInput"];
+                };
+            };
+            responses: {
+                /** @description Password reset completed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid or expired reset token */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/storage/usage": {
         parameters: {
             query?: never;
@@ -322,7 +419,47 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update storage bucket settings (visibility, quota) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    name: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateBucketRequest"];
+                };
+            };
+            responses: {
+                /** @description Bucket updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BucketDetailResponse"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bucket not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/storage/buckets/{name}/usage": {
@@ -336,6 +473,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: string;
                     limit?: string;
                 };
                 header?: never;
@@ -904,6 +1042,19 @@ export interface components {
              */
             quotaBytes: number;
         };
+        UpdateBucketRequest: {
+            /**
+             * @description Updated bucket access visibility
+             * @example public
+             * @enum {string}
+             */
+            visibility?: "private" | "public";
+            /**
+             * @description Updated storage quota limit in bytes
+             * @example 21474836480
+             */
+            quotaBytes?: number;
+        };
         BucketNameParam: {
             /**
              * @description Unique name of the bucket
@@ -992,6 +1143,12 @@ export interface components {
                     totalBytes: number;
                     calculatedAt: string | null;
                 }[];
+                meta: {
+                    page: number;
+                    limit: number;
+                    total: number;
+                    totalPages: number;
+                };
             };
         };
         RegisterInput: {
@@ -1029,6 +1186,26 @@ export interface components {
              * @example SecurePassword123!
              */
             password: string;
+        };
+        ForgotPasswordInput: {
+            /**
+             * Format: email
+             * @description User email address
+             * @example dev@s3forge.org
+             */
+            email: string;
+        };
+        ResetPasswordInput: {
+            /**
+             * @description Password reset token from email link
+             * @example a1b2c3d4e5f6...
+             */
+            token: string;
+            /**
+             * @description New password
+             * @example NewSecurePassword123!
+             */
+            newPassword: string;
         };
         PresignedUploadResponse: {
             /** @enum {string} */
@@ -1133,13 +1310,18 @@ export interface components {
             };
         };
         CredentialWithSecretResponse: {
-            id: number;
-            accessKey: string;
-            secretKey: string;
-            description: string | null;
-            isActive: boolean;
-            lastUsedAt: string | null;
-            createdAt: string;
+            /** @enum {string} */
+            status: "success";
+            message: string;
+            data: {
+                id: number;
+                accessKey: string;
+                secretKey: string;
+                description: string | null;
+                isActive: boolean;
+                lastUsedAt: string | null;
+                createdAt: string;
+            };
         };
         CreateCredentialInput: {
             /**
@@ -1156,6 +1338,8 @@ export interface components {
             userEmail?: string | null;
             credentialId?: number | null;
             action: string;
+            resourceType?: string;
+            resourceId?: string | null;
             resource?: string;
             details?: unknown;
             ipAddress: string | null;

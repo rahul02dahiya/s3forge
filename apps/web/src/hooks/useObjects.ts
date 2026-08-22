@@ -7,7 +7,7 @@ export type PresignedDownloadInput = components['schemas']['PresignedDownloadInp
 export type DeleteObjectInput = components['schemas']['DeleteObjectInput'];
 export type BatchDeleteObjectsInput = components['schemas']['BatchDeleteObjectsInput'];
 
-export function useObjects(bucketName: string, prefix = '', recursive = 'false', limit = '1000') {
+export function useObjects(bucketName: string, prefix = '', recursive = 'true', limit = '1000') {
   return useQuery({
     queryKey: ['objects', bucketName, prefix, recursive, limit],
     queryFn: async () => {

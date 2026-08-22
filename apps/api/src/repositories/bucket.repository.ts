@@ -113,6 +113,25 @@ export class BucketRepository {
   }
 
   /**
+   * Update bucket settings by ID.
+   */
+  async update(
+    id: number,
+    params: Partial<{ visibility: 'private' | 'public'; quotaBytes: number }>,
+  ): Promise<BucketRecord | undefined> {
+    const [updated] = await db
+      .update(buckets)
+      .set({
+        ...params,
+        updatedAt: new Date(),
+      })
+      .where(eq(buckets.id, id))
+      .returning();
+
+    return updated;
+  }
+
+  /**
    * Soft-delete a bucket by ID.
    */
   async softDelete(id: number): Promise<BucketRecord | undefined> {

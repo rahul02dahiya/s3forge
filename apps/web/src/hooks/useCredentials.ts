@@ -4,7 +4,7 @@ import { apiClient } from '../lib/api/client';
 import type { components } from '../lib/api/schema';
 
 export type CredentialResponse = components['schemas']['CredentialResponse'];
-export type CredentialWithSecretResponse = components['schemas']['CredentialWithSecretResponse'];
+export type CredentialWithSecretResponse = components['schemas']['CredentialWithSecretResponse']['data'];
 export type CreateCredentialInput = components['schemas']['CreateCredentialInput'];
 
 export function useCredentials(page = 1, limit = 20) {
@@ -57,7 +57,7 @@ export function useRevokeCredential() {
     mutationFn: async (id: number) => {
       const { data, error } = await apiClient.PATCH('/credentials/{id}/revoke', {
         params: {
-          path: { id: id as any }, // cast as any because id is a number but typescript expects string in the path param due to openapi string generation
+          path: { id: String(id) }, // cast as String because id is a number but typescript expects string in the path param due to openapi string generation
         },
       });
 
@@ -80,7 +80,7 @@ export function useDeleteCredential() {
     mutationFn: async (id: number) => {
       const { data, error } = await apiClient.DELETE('/credentials/{id}', {
         params: {
-          path: { id: id as any },
+          path: { id: String(id) },  // cast as String because id is a number but typescript expects string in the path param due to openapi string generation
         },
       });
 

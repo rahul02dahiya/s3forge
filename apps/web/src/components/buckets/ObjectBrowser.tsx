@@ -30,7 +30,7 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
   const [isUploading, setIsUploading] = useState(false);
   const [deleteObjectKey, setDeleteObjectKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { data: objectsResponse, isLoading, isError, refetch } = useObjects(bucketName, prefix);
   const generateUploadMutation = useGeneratePresignedUpload(bucketName);
   const generateDownloadMutation = useGeneratePresignedDownload(bucketName);
@@ -49,7 +49,7 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
 
     try {
       setIsUploading(true);
-      
+
       // 1. Get presigned URL from backend
       const presignedData = await generateUploadMutation.mutateAsync({
         objectName: prefix ? `${prefix}${file.name}` : file.name,
@@ -58,7 +58,7 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
       });
 
       const uploadUrl = presignedData?.data?.url;
-      
+
       if (!uploadUrl) {
         throw new Error('Failed to get upload URL from backend');
       }
@@ -129,17 +129,17 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
           <CardDescription>Manage files and objects in this bucket</CardDescription>
         </div>
         <div className="flex items-center gap-3">
-          <Input 
-            placeholder="Search by prefix..." 
+          <Input
+            placeholder="Search by prefix..."
             value={prefix}
             onChange={(e) => setPrefix(e.target.value)}
             className="w-full sm:w-64"
           />
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            onChange={handleFileChange} 
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileChange}
           />
           <Button onClick={handleUploadClick} disabled={isUploading} className="gap-2 shrink-0">
             {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
@@ -188,18 +188,18 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8"
                           onClick={() => handleDownload(obj.name)}
                           title="Download"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => setDeleteObjectKey(obj.name)}
                           disabled={deleteMutation.isPending && deleteObjectKey === obj.name}
@@ -227,7 +227,7 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 handleDelete();

@@ -31,7 +31,7 @@ export class UsageController {
     const query = req.query as unknown as UsageHistoryQueryInput;
     const orgId = this.getOrgId(req);
 
-    const usage = await usageService.getBucketUsage(name, orgId, query.limit);
+    const usage = await usageService.getBucketUsage(name, orgId, query.page, query.limit);
     sendSuccess(res, usage, 'Bucket usage metrics retrieved successfully', 200);
   }
 

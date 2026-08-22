@@ -46,13 +46,14 @@ export function useBucket(name: string) {
   });
 }
 
-export function useBucketUsage(name: string) {
+export function useBucketUsage(name: string, page = 1, limit = 30) {
   return useQuery({
-    queryKey: ['buckets', name, 'usage'],
+    queryKey: ['buckets', name, 'usage', page, limit],
     queryFn: async () => {
       const { data, error } = await apiClient.GET('/storage/buckets/{name}/usage', {
         params: {
           path: { name },
+          query: { page: String(page), limit: String(limit) },
         },
       });
 
@@ -83,6 +84,35 @@ export function useCreateBucket() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buckets'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-usage'] });
+    },
+  });
+}
+
+export function useUpdateBucket() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ name, visibility, quotaBytes }: { name: string; visibility?: 'private' | 'public'; quotaBytes?: number }) => {
+      const { data, error } = await apiClient.PATCH('/storage/buckets/{name}', {
+        params: {
+          path: { name },
+        },
+        body: {
+          visibility,
+          quotaBytes,
+        },
+      });
+
+      if (error) {
+        throw new Error((error as any)?.message || 'Failed to update bucket');
+      }
+
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['buckets'] });
+      queryClient.invalidateQueries({ queryKey: ['buckets', variables.name] });
       queryClient.invalidateQueries({ queryKey: ['storage-usage'] });
     },
   });

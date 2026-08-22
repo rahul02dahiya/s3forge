@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { verifyJwt } from '../lib/jwt.js';
 import { s3CredentialRepository } from '../repositories/s3-credential.repository.js';
 import { AppError } from '../lib/app-error.js';
+import { logger } from '../lib/logger.js';
 
 export interface AuthenticateOptions {
   optional?: boolean;
@@ -66,7 +67,9 @@ export function authenticate(options: AuthenticateOptions = {}) {
           if (credential && credential.isActive) {
             req.organizationId = credential.organizationId;
             // Touch last used timestamp asynchronously
-            s3CredentialRepository.updateLastUsed(credential.accessKey).catch(() => {});
+            s3CredentialRepository.updateLastUsed(credential.accessKey).catch((err) => {
+              logger.warn({ err, accessKey: credential.accessKey }, 'Failed to update credential lastUsed timestamp');
+            });
             return next();
           }
         }

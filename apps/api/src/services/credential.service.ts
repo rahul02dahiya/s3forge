@@ -43,7 +43,7 @@ export class CredentialService {
       resourceType: 'credential',
       resourceId: String(credential.id),
       metadata: { accessKey: credential.accessKey, description },
-    }).catch(() => {});
+    }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return {
       id: credential.id,
@@ -111,7 +111,7 @@ export class CredentialService {
       resourceType: 'credential',
       resourceId: String(updated.id),
       metadata: { accessKey: updated.accessKey, isActive },
-    }).catch(() => {});
+    }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     const { secretKeyHash, ...safeCredential } = updated;
     return safeCredential;
@@ -135,7 +135,7 @@ export class CredentialService {
       resourceType: 'credential',
       resourceId: String(deleted.id),
       metadata: { accessKey: deleted.accessKey },
-    }).catch(() => {});
+    }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return true;
   }

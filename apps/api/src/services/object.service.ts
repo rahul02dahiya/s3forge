@@ -56,10 +56,10 @@ export class ObjectService {
         resourceId: input.objectName,
         metadata: { bucketName, objectName: input.objectName, expirySeconds },
       })
-      .catch(() => {});
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return {
-      uploadUrl,
+      url: uploadUrl,
       bucketName,
       objectName: input.objectName,
       expirySeconds,
@@ -101,10 +101,10 @@ export class ObjectService {
         resourceId: input.objectName,
         metadata: { bucketName, objectName: input.objectName, expirySeconds },
       })
-      .catch(() => {});
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return {
-      downloadUrl,
+      url: downloadUrl,
       bucketName,
       objectName: input.objectName,
       expirySeconds,
@@ -127,7 +127,7 @@ export class ObjectService {
 
     const userPrefix = query.prefix ?? '';
     const fullPrefix = `${bucket.minioBucketName}/${userPrefix}`;
-    const recursive = query.recursive ?? true;
+    const recursive = typeof query.recursive === 'boolean' ? query.recursive : query.recursive !== 'false';
     const limit = query.limit ?? constants.PAGINATION.DEFAULT_OBJECT_LIMIT;
 
     const objectsList: Array<{
@@ -213,7 +213,7 @@ export class ObjectService {
         resourceId: objectName,
         metadata: { bucketName, objectName },
       })
-      .catch(() => {});
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return true;
   }
@@ -247,7 +247,7 @@ export class ObjectService {
         resourceId: `${objectNames.length} objects`,
         metadata: { bucketName, objectCount: objectNames.length, objectNames },
       })
-      .catch(() => {});
+      .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
     return {
       bucketName,

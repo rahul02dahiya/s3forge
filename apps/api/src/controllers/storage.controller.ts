@@ -51,6 +51,18 @@ export class StorageController {
   }
 
   /**
+   * PATCH /api/v1/storage/buckets/:name
+   */
+  async updateBucket(req: Request, res: Response): Promise<void> {
+    const orgId = this.getOrgId(req);
+    const userId = req.user?.userId;
+    const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
+    const bucket = await storageService.updateBucketByName(name, orgId, req.body, userId);
+
+    sendSuccess(res, bucket, 'Bucket updated successfully', 200);
+  }
+
+  /**
    * DELETE /api/v1/storage/buckets/:name
    */
   async deleteBucket(req: Request, res: Response): Promise<void> {

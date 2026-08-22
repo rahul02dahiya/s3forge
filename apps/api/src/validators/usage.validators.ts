@@ -9,11 +9,16 @@ extendZodWithOpenApi(z);
  */
 export const UsageHistoryQuerySchema = z
   .object({
+    page: z
+      .string()
+      .optional()
+      .transform((val) => (val ? Math.max(1, parseInt(val, 10)) : 1))
+      .openapi({ description: 'Page number for historical snapshots (default: 1)', example: '1' }),
     limit: z
       .string()
       .optional()
       .transform((val) => (val ? Math.min(100, Math.max(1, parseInt(val, 10))) : 30))
-      .openapi({ description: 'Number of historical data points (default: 30)', example: '30' }),
+      .openapi({ description: 'Number of historical data points per page (default: 30)', example: '30' }),
   })
   .openapi('UsageHistoryQuery');
 
@@ -55,7 +60,13 @@ export const BucketUsageResponseSchema = z.object({
       objectCount: z.number(),
       totalBytes: z.number(),
       calculatedAt: z.string().nullable()
-    }))
+    })),
+    meta: z.object({
+      page: z.number(),
+      limit: z.number(),
+      total: z.number(),
+      totalPages: z.number()
+    })
   })
 }).openapi('BucketUsageResponse');
 

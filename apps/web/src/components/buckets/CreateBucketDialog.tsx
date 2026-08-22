@@ -16,6 +16,7 @@ import {
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
+import { VisibilitySelector } from './VisibilitySelector';
 
 const createBucketSchema = z.object({
   name: z
@@ -106,6 +107,12 @@ export function CreateBucketDialog({ open, onOpenChange }: CreateBucketDialogPro
               </p>
             )}
           </div>
+
+          <VisibilitySelector
+            value={form.watch('visibility')}
+            onChange={(val) => form.setValue('visibility', val, { shouldValidate: true })}
+            error={form.formState.errors.visibility?.message}
+          />
 
           <DialogFooter className="mt-6">
             <Button

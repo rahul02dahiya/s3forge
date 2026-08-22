@@ -3,6 +3,9 @@ import { usageSnapshotRepository } from '../repositories/usage-snapshot.reposito
 import { minio } from '../config/minio.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
+import { constants } from '@s3forge/config';
+
+const ROOT_BUCKET = constants.STORAGE.ROOT_BUCKET_NAME || 's3forge-storage';
 
 export class UsageService {
   /**
@@ -18,7 +21,8 @@ export class UsageService {
     let totalBytes = 0;
 
     try {
-      const stream = minio.listObjectsV2(bucket.minioBucketName, '', true);
+      const prefix = `${bucket.minioBucketName}/`;
+      const stream = minio.listObjectsV2(ROOT_BUCKET, prefix, true);
       for await (const obj of stream) {
         if (obj && obj.size !== undefined) {
           objectCount += 1;
@@ -52,14 +56,21 @@ export class UsageService {
   /**
    * Get usage metrics and snapshot history for a specific bucket.
    */
-  async getBucketUsage(bucketName: string, organizationId: number, limit: number = 30) {
+  async getBucketUsage(
+    bucketName: string,
+    organizationId: number,
+    page: number = 1,
+    limit: number = 30,
+  ) {
     const bucket = await bucketRepository.findByName(organizationId, bucketName);
     if (!bucket) {
       throw AppError.notFound(`Bucket '${bucketName}' not found`);
     }
 
-    const history = await usageSnapshotRepository.getSnapshotHistory(bucket.id, limit);
-    const latest = history[0] ?? null;
+    const { data: history, total, totalPages } =
+      await usageSnapshotRepository.getSnapshotHistoryPaginated(bucket.id, page, limit);
+
+    const latest = history[0] ?? (await usageSnapshotRepository.getLatestSnapshot(bucket.id));
 
     return {
       bucket: {
@@ -84,6 +95,12 @@ export class UsageService {
         totalBytes: h.totalBytes,
         calculatedAt: h.calculatedAt,
       })),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
     };
   }
 

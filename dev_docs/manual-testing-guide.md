@@ -338,7 +338,48 @@ curl -X GET http://localhost:3000/api/v1/storage/usage \
 
 ---
 
-#### 2. Recalculate MinIO Bucket Usage (`POST /api/v1/storage/buckets/:name/usage/recalculate`)
+#### 2. Get Bucket Usage & Historical Snapshots (`GET /api/v1/storage/buckets/:name/usage`)
+
+**cURL Request:**
+```bash
+curl -X GET "http://localhost:3000/api/v1/storage/buckets/app-backups/usage?page=1&limit=30" \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>"
+```
+
+**Expected Response (200 OK):**
+```json
+{
+  "status": "success",
+  "message": "Bucket usage history retrieved",
+  "data": {
+    "bucket": {
+      "id": 1,
+      "name": "app-backups",
+      "currentObjectCount": 14,
+      "currentTotalBytes": 1548576,
+      "lastCalculatedAt": "2026-08-22T18:00:00.000Z"
+    },
+    "history": [
+      {
+        "id": 10,
+        "objectCount": 14,
+        "totalBytes": 1548576,
+        "calculatedAt": "2026-08-22T18:00:00.000Z"
+      }
+    ],
+    "meta": {
+      "page": 1,
+      "limit": 30,
+      "total": 1,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
+#### 3. Recalculate MinIO Bucket Usage (`POST /api/v1/storage/buckets/:name/usage/recalculate`)
 
 **cURL Request:**
 ```bash
@@ -370,7 +411,7 @@ curl -X POST http://localhost:3000/api/v1/storage/buckets/app-backups/objects/pr
   "status": "success",
   "message": "Presigned upload URL generated successfully",
   "data": {
-    "uploadUrl": "http://127.0.0.1:9000/s3forge-storage/acme-cloud-corp/u1/app-backups/documents/report.pdf?X-Amz-Algorithm=...",
+    "url": "http://127.0.0.1:9000/s3forge-storage/acme-cloud-corp/u1/app-backups/documents/report.pdf?X-Amz-Algorithm=...",
     "bucketName": "app-backups",
     "objectName": "documents/report.pdf",
     "expirySeconds": 3600

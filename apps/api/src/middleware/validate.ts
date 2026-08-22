@@ -43,7 +43,9 @@ export function validate(schemas: ValidationSchemas) {
     if (schemas.query) {
       const result = schemas.query.safeParse(req.query);
       if (result.success) {
-        Object.assign(req.query, result.data);
+        for (const [key, value] of Object.entries(result.data)) {
+          (req.query as any)[key] = value;
+        }
       } else {
         errors.push(...formatZodErrors(result.error, 'query'));
       }
