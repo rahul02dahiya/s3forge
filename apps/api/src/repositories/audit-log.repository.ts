@@ -1,5 +1,5 @@
 import { db } from '../config/database.js';
-import { auditLogs } from '@s3forge/database';
+import { auditLogs, users } from '@s3forge/database';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
 export interface CreateAuditLogData {
@@ -36,7 +36,7 @@ export class AuditLogRepository {
   }
 
   /**
-   * Query paginated audit log entries for an organization.
+   * Query paginated audit log entries for an organization with joined user details.
    */
   async findPaginatedByOrganization(
     organizationId: number,
@@ -54,8 +54,23 @@ export class AuditLogRepository {
     const combinedWhere = and(...whereConditions);
 
     const dataQuery = db
-      .select()
+      .select({
+        id: auditLogs.id,
+        organizationId: auditLogs.organizationId,
+        userId: auditLogs.userId,
+        userName: users.displayName,
+        userEmail: users.email,
+        action: auditLogs.action,
+        resourceType: auditLogs.resourceType,
+        resourceId: auditLogs.resourceId,
+        resource: sql<string>`COALESCE(${auditLogs.resourceId}, ${auditLogs.resourceType})`,
+        ipAddress: auditLogs.ipAddress,
+        userAgent: auditLogs.userAgent,
+        metadata: auditLogs.metadata,
+        createdAt: auditLogs.createdAt,
+      })
       .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id))
       .where(combinedWhere)
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit)

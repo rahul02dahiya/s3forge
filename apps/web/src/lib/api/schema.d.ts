@@ -1152,9 +1152,11 @@ export interface components {
             id: number;
             organizationId: number;
             userId: number | null;
-            credentialId: number | null;
+            userName?: string | null;
+            userEmail?: string | null;
+            credentialId?: number | null;
             action: string;
-            resource: string;
+            resource?: string;
             details?: unknown;
             ipAddress: string | null;
             userAgent: string | null;

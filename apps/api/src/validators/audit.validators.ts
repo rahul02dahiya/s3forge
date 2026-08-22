@@ -42,13 +42,17 @@ export const AuditLogResponseSchema = z.object({
   id: z.number(),
   organizationId: z.number(),
   userId: z.number().nullable(),
-  credentialId: z.number().nullable(),
+  userName: z.string().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
+  credentialId: z.number().nullable().optional(),
   action: z.string(),
-  resource: z.string(),
-  details: z.any().nullable(),
+  resourceType: z.string().optional(),
+  resourceId: z.string().nullable().optional(),
+  resource: z.string().optional(),
+  details: z.any().nullable().optional(),
   ipAddress: z.string().nullable(),
   userAgent: z.string().nullable(),
-  createdAt: z.string(),
+  createdAt: z.union([z.string(), z.date()]),
 }).openapi('AuditLogResponse');
 
 export const AuditLogListResponseSchema = z.object({

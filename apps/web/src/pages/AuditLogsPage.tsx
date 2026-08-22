@@ -21,7 +21,7 @@ export function AuditLogsPage() {
   const [debouncedFilter, setDebouncedFilter] = useState('');
 
   const { data: auditLogsData, isLoading, isError } = useAuditLogs(page, limit, debouncedFilter || undefined);
-  
+
   const logs = auditLogsData?.data || [];
   const meta = auditLogsData?.meta || { total: 0, page: 1, limit };
   const totalPages = Math.ceil(meta.total / meta.limit);
@@ -68,7 +68,7 @@ export function AuditLogsPage() {
                 Detailed record of all system and user operations.
               </CardDescription>
             </div>
-            
+
             <form onSubmit={handleSearch} className="flex gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -137,7 +137,14 @@ export function AuditLogsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {log.userId ? (
+                          {log.userName || log.userEmail ? (
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{log.userName || log.userEmail}</span>
+                              {log.userName && log.userEmail && (
+                                <span className="text-xs text-muted-foreground font-mono">{log.userEmail}</span>
+                              )}
+                            </div>
+                          ) : log.userId ? (
                             <span className="text-sm">User #{log.userId}</span>
                           ) : log.credentialId ? (
                             <span className="text-sm font-mono text-muted-foreground">Key #{log.credentialId}</span>

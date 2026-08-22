@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useCredentials, useRevokeCredential, useDeleteCredential } from '../hooks/useCredentials';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Key, Trash2, PowerOff, CheckCircle2, Loader2, Plus, Clock } from 'lucide-react';
+import { Key, Trash2, PowerOff, CheckCircle2, Loader2, Plus, Clock, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { CreateCredentialDialog } from '../components/credentials/CreateCredentialDialog';
+import { CredentialUsageGuideDialog } from '../components/credentials/CredentialUsageGuideDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 
 export function CredentialsPage() {
@@ -13,6 +14,7 @@ export function CredentialsPage() {
   const deleteMutation = useDeleteCredential();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   
   const [revokeId, setRevokeId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -60,10 +62,16 @@ export function CredentialsPage() {
             Manage S3 access keys for your applications.
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Generate Keypair
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsGuideOpen(true)} className="gap-2">
+            <BookOpen className="h-4 w-4 text-primary" />
+            Usage Guide
+          </Button>
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Generate Keypair
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -171,6 +179,7 @@ export function CredentialsPage() {
       </Card>
 
       <CreateCredentialDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <CredentialUsageGuideDialog open={isGuideOpen} onOpenChange={setIsGuideOpen} />
 
       {/* Revoke Confirmation */}
       <AlertDialog open={revokeId !== null} onOpenChange={(open) => !open && setRevokeId(null)}>

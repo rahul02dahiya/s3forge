@@ -32,11 +32,37 @@ export function authenticate(options: AuthenticateOptions = {}) {
         }
       }
 
-      // 2. Check S3 Access Key in header (e.g. X-S3Forge-Access-Key or X-Access-Key)
+      // 2. Check S3 Access Key in header or AWS SigV4 Authorization header / query param
       if (options.allowAccessKey !== false) {
+        let accessKey: string | undefined;
+
+        // 2a. Check X-S3Forge-Access-Key or X-Access-Key header
         const accessKeyHeader = (req.headers['x-s3forge-access-key'] || req.headers['x-access-key']) as string | undefined;
         if (accessKeyHeader) {
-          const credential = await s3CredentialRepository.findByAccessKey(accessKeyHeader.trim());
+          accessKey = accessKeyHeader.trim();
+        }
+
+        // 2b. Check AWS SigV4 Authorization header (e.g. AWS4-HMAC-SHA256 Credential=ACCESS_KEY/...)
+        if (!accessKey && authHeader && authHeader.startsWith('AWS4-HMAC-SHA256 ')) {
+          const match = authHeader.match(/Credential=([^/\s,]+)/);
+          if (match && match[1]) {
+            accessKey = match[1].trim();
+          }
+        }
+
+        // 2c. Check AWS SigV4 query parameter (X-Amz-Credential)
+        if (!accessKey) {
+          const amzCred = (req.query['X-Amz-Credential'] || req.query['x-amz-credential']) as string | undefined;
+          if (amzCred) {
+            const parts = amzCred.split('/');
+            if (parts[0]) {
+              accessKey = parts[0].trim();
+            }
+          }
+        }
+
+        if (accessKey) {
+          const credential = await s3CredentialRepository.findByAccessKey(accessKey);
           if (credential && credential.isActive) {
             req.organizationId = credential.organizationId;
             // Touch last used timestamp asynchronously
