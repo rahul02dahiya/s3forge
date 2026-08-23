@@ -36,7 +36,7 @@ To deploy S3Forge on your production server using Docker and Caddy:
 
 1. **Set Environment Variables**: Create a `.env` file on your server with secure secrets:
 
-2. **Configure DNS**: Ensure `s3forge.chizumizu.space` points to your server's public IP address (Ports 80 & 443 open).
+2. **Configure DNS**: Ensure `your-domain.com`, `api.your-domain.com`, and `admin.your-domain.com` point to your server's public IP address (Ports 80 & 443 open).
 
 3. **Start Containers**: Run Docker Compose in detached mode:
    ```bash
@@ -44,8 +44,9 @@ To deploy S3Forge on your production server using Docker and Caddy:
    ```
 
 4. **Access Services**:
-   * **Swagger API UI**: `https://s3forge.chizumizu.space/api/v1/docs` (or `https://s3forge.chizumizu.space/`)
-   * **MinIO Admin Portal**: `https://s3forge.chizumizu.space/admin`
+   * **API Docs (Swagger)**: `https://api.your-domain.com/api/v1/docs`
+   * **MinIO Admin Portal**: `https://admin.your-domain.com`
+
 
 ## High-Level Architecture
 

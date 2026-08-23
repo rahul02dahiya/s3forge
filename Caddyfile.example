@@ -1,19 +1,37 @@
-# Replace 'your-domain.com' with your actual domain or use an environment variable like {$DOMAIN_NAME}
-{$DOMAIN_NAME:your-domain.com} {
-	# Enable compression for API responses & Swagger assets
+# API Backend & Swagger UI
+api.your_domain.com {
 	encode gzip zstd
 
-	# Convenience redirects to Swagger UI
-	redir / /api/v1/docs 308
-	redir /docs /api/v1/docs 308
-
-	# MinIO Admin Web Console (runs on port 9001 inside container)
-	handle_path /admin* {
-		reverse_proxy minio:9001
+	# Matcher for Swagger UI and raw OpenAPI JSON specification
+	@docs {
+		path /api/v1/docs* /api/v1/openapi.json* /openapi.json*
 	}
 
-	# Express API Backend & Swagger UI (runs on port 3000 inside container)
+	# Protect Swagger documentation & OpenAPI spec with HTTP Basic Auth
+	basic_auth @docs {
+		# To generate your own password hash, run:
+		# docker exec -it s3forge-caddy caddy hash-password --plaintext "your_new_password"
+		admin <REPLACE_ME_WITH_OUTPUT_HASH_VALUE>
+	}
+
 	handle {
 		reverse_proxy api:3000
 	}
 }
+
+# MinIO Admin Web Console if required for ease of access
+admin.your_domain.com {
+	encode gzip zstd
+
+	handle {
+		reverse_proxy minio:9001
+	}
+}
+
+# Frontend Web App (Optional: Uncomment if hosting frontend via Caddy instead external hosting service)
+# your_domain.com {
+# 	encode gzip zstd
+# 	# handle {
+# 	# 	reverse_proxy web:80
+# 	# }
+# }
