@@ -1,7 +1,9 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./schema";
 
-export const apiClient = createClient<paths>({ baseUrl: "/api/v1" });
+ export const apiClient = createClient<paths>({
+      baseUrl: import.meta.env.VITE_API_BASE_URL || "/api/v1",
+    });
 
 // Add request interceptor to attach bearer token if needed
 apiClient.use({
