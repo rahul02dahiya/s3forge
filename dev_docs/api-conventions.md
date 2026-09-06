@@ -6,7 +6,8 @@ This document describes the API design conventions, response envelopes, validati
 
 ## API Base Path & Versioning
 
-- **Base URL**: `/api/v1`
+- **JSON API Base URL**: `/api/v1`
+- **S3-Compatible Gateway Base URL**: `/s3`
 - **Versioning Rule**: All endpoints are mounted under versioned path prefixes (`/api/v1/auth`, `/api/v1/storage`, `/api/v1/credentials`, `/api/v1/audit-logs`). Breaking changes to request parameters or response envelopes require incrementing the URL version segment (e.g. `/api/v2`).
 
 ---
@@ -16,11 +17,12 @@ This document describes the API design conventions, response envelopes, validati
 ### 1. Dual Authentication Headers
 Endpoints in S3Forge accept two forms of authentication via `apps/api/src/middleware/authenticate.ts`:
 - **User Dashboard Requests**: `Authorization: Bearer <jwt_token>` (HMAC-SHA256 signed JWTs valid for 7 days).
-- **Programmatic S3 Access**: `X-S3Forge-Access-Key: <access_key>` (Validates active keypairs in `s3_credentials`).
+- **Programmatic JSON API Access**: `X-S3Forge-Access-Key: <access_key>` and `X-S3Forge-Secret-Key: <secret_key>` (validates active keypairs in `s3_credentials`).
+- **Native S3 Client Access**: AWS SigV4 requests against `/s3` using the generated access key and secret key.
 
 ### 2. S3 Secret Access Key Security Policy
 - Secret Access Keys are generated as 40-character high-entropy random strings.
-- In PostgreSQL, only the SHA-256 hash (`secret_key_hash`) is stored.
+- In PostgreSQL, `secret_key_hash` is stored for custom-header verification and `secret_key_encrypted` is stored for SigV4 verification.
 - The raw plaintext `secretKey` is returned in the API response **ONLY ONCE** upon initial key generation (`POST /api/v1/credentials`). Subsequent queries (`GET /api/v1/credentials`) return metadata without the secret key.
 
 ### 3. Role-Based Access Control (RBAC)
@@ -76,6 +78,15 @@ Interactive API documentation and schema exploration are hosted live by the API 
 - `GET /api/v1/storage/buckets/:name/objects/stat`: Get metadata for a specific object.
 - `DELETE /api/v1/storage/buckets/:name/objects`: Delete a single object.
 - `POST /api/v1/storage/buckets/:name/objects/batch-delete`: Batch delete multiple objects.
+
+#### S3-Compatible Gateway (`/s3`)
+- `GET /s3/`: List organization buckets for AWS CLI, boto3, and AWS SDKs.
+- `HEAD /s3/:bucket`: Check whether an organization bucket exists.
+- `GET /s3/:bucket`: List objects in an organization bucket.
+- `PUT /s3/:bucket/:key`: Upload an object stream.
+- `GET /s3/:bucket/:key`: Download an object stream.
+- `HEAD /s3/:bucket/:key`: Inspect object metadata.
+- `DELETE /s3/:bucket/:key`: Delete an object.
 
 #### Audit Logging (`/api/v1/audit-logs`)
 - `GET /api/v1/audit-logs`: Get paginated audit trail of organization state changes (`owner`/`admin` required).

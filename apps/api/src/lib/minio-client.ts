@@ -1,6 +1,7 @@
 import { minio } from '../config/minio.js';
 import { logger } from './logger.js';
 import { AppError } from './app-error.js';
+import type { Readable } from 'stream';
 
 interface RetryOptions {
   maxRetries?: number;
@@ -102,6 +103,16 @@ export const minioService = {
 
   async getObject(bucketName: string, objectName: string) {
     return withMinioRetry('getObject', () => minio.getObject(bucketName, objectName));
+  },
+
+  async putObject(
+    bucketName: string,
+    objectName: string,
+    stream: Readable,
+    size?: number,
+    metaData?: Record<string, string>,
+  ) {
+    return withMinioRetry('putObject', () => minio.putObject(bucketName, objectName, stream, size, metaData));
   },
 
   async removeObject(bucketName: string, objectName: string): Promise<void> {

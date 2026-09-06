@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAppConfig } from '../../hooks/useAppConfig';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,10 @@ export function CredentialUsageGuideDialog({ open, onOpenChange }: CredentialUsa
   const [activeTab, setActiveTab] = useState<TabType>('cli');
   const [copiedTab, setCopiedTab] = useState<string | null>(null);
 
+  const { loading: _loading, config } = useAppConfig();
+
+  const region = config?.s3Gateway?.region ?? 'us-east-1';
+
   const snippets: Record<TabType, { label: string; language: string; code: string; note?: string }> = {
     cli: {
       label: 'AWS CLI',
@@ -28,11 +33,11 @@ export function CredentialUsageGuideDialog({ open, onOpenChange }: CredentialUsa
       code: `# 1. Configure AWS CLI with your S3Forge Access Key and Secret Key
 aws configure set aws_access_key_id "YOUR_ACCESS_KEY"
 aws configure set aws_secret_access_key "YOUR_SECRET_KEY"
-aws configure set default.region "us-east-1"
+aws configure set default.region "${region}"
 
-# 2. Interact directly with S3Forge API endpoints
-aws --endpoint-url http://localhost:3000/api/v1/storage s3 ls`,
-      note: 'AWS CLI sends AWS SigV4 signatures which are now parsed and authenticated directly by S3Forge.',
+# 2. Interact with the S3-compatible gateway
+aws --endpoint-url http://localhost:3000/s3 s3 ls`,
+      note: 'AWS CLI sends AWS SigV4 signatures to the /s3 gateway.',
     },
     node: {
       label: 'Node.js (AWS SDK v3)',
@@ -41,19 +46,19 @@ aws --endpoint-url http://localhost:3000/api/v1/storage s3 ls`,
 
 // Initialize S3Client with S3Forge credentials
 const s3 = new S3Client({
-  endpoint: "http://localhost:3000/api/v1/storage",
-  region: "us-east-1",
+  endpoint: "http://localhost:3000/s3",
+  region: "${region}",
   credentials: {
     accessKeyId: "YOUR_ACCESS_KEY",
     secretAccessKey: "YOUR_SECRET_KEY",
   },
-  forcePathStyle: true, // Enables path-style routing (/buckets)
+  forcePathStyle: true,
 });
 
 // Example: List all organization buckets
 const response = await s3.send(new ListBucketsCommand({}));
 console.log("Buckets:", response.Buckets);`,
-      note: 'Set forcePathStyle: true so AWS SDK routes requests using path style.',
+      note: 'Set forcePathStyle: true so AWS SDK routes requests through the /s3 gateway.',
     },
     python: {
       label: 'Python (boto3)',
@@ -63,17 +68,17 @@ console.log("Buckets:", response.Buckets);`,
 # Initialize boto3 client with S3Forge credentials
 s3 = boto3.client(
     's3',
-    endpoint_url='http://localhost:3000/api/v1/storage',
+    endpoint_url='http://localhost:3000/s3',
     aws_access_key_id='YOUR_ACCESS_KEY',
     aws_secret_access_key='YOUR_SECRET_KEY',
-    region_name='us-east-1'
+    region_name='${region}'
 )
 
 # Example: Fetch buckets
 response = s3.list_buckets()
 for bucket in response.get('Buckets', []):
     print(f"Bucket: {bucket['Name']}")`,
-      note: 'boto3 uses AWS SigV4 headers automatically which S3Forge validates directly.',
+      note: 'boto3 uses AWS SigV4 headers automatically against the /s3 gateway.',
     },
     curl: {
       label: 'cURL / REST Headers',
@@ -85,8 +90,9 @@ curl -H "x-s3forge-access-key: YOUR_ACCESS_KEY" \\
 
 # Or list objects within a bucket:
 curl -H "x-s3forge-access-key: YOUR_ACCESS_KEY" \\
+     -H "x-s3forge-secret-key: YOUR_SECRET_KEY" \\
      http://localhost:3000/api/v1/storage/buckets/my-bucket/objects`,
-      note: 'You can also pass x-s3forge-access-key header directly for simple HTTP requests.',
+      note: 'REST API requests require both the access key and secret key headers.',
     },
   };
 

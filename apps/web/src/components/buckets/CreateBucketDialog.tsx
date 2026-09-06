@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useCreateBucket } from '../../hooks/useBuckets';
+import { useAppConfig } from '../../hooks/useAppConfig';
 
 import {
   Dialog,
@@ -40,12 +41,15 @@ interface CreateBucketDialogProps {
 
 export function CreateBucketDialog({ open, onOpenChange }: CreateBucketDialogProps) {
   const createBucketMutation = useCreateBucket();
+  const { loading: _loading, config } = useAppConfig();
+
+  const defaultRegion = config?.s3Gateway?.region ?? 'us-east-1';
 
   const form = useForm<CreateBucketFormValues>({
     resolver: zodResolver(createBucketSchema),
     defaultValues: {
       name: '',
-      region: 'us-east-1',
+      region: defaultRegion,
       visibility: 'private',
     },
   });

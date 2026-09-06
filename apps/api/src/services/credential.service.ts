@@ -1,5 +1,6 @@
 import { s3CredentialRepository } from '../repositories/s3-credential.repository.js';
 import { generateAccessKey, generateSecretKey, hashSecretKey } from '../lib/credential-generator.js';
+import { encryptSecretKey } from '../lib/credential-crypto.js';
 import { auditService } from './audit.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
@@ -26,11 +27,13 @@ export class CredentialService {
     const accessKey = generateAccessKey();
     const secretKey = generateSecretKey();
     const secretKeyHash = hashSecretKey(secretKey);
+    const secretKeyEncrypted = encryptSecretKey(secretKey);
 
     const credential = await s3CredentialRepository.create({
       organizationId,
       accessKey,
       secretKeyHash,
+      secretKeyEncrypted,
       description,
     });
 
@@ -86,7 +89,7 @@ export class CredentialService {
       throw AppError.notFound('Credential not found');
     }
 
-    const { secretKeyHash, ...safeCredential } = credential;
+    const { secretKeyHash, secretKeyEncrypted, ...safeCredential } = credential;
     return safeCredential;
   }
 
@@ -113,7 +116,7 @@ export class CredentialService {
       metadata: { accessKey: updated.accessKey, isActive },
     }).catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
-    const { secretKeyHash, ...safeCredential } = updated;
+    const { secretKeyHash, secretKeyEncrypted, ...safeCredential } = updated;
     return safeCredential;
   }
 

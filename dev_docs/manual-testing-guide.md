@@ -26,6 +26,28 @@ http://localhost:3000/api/v1/docs
 ```
 You can execute all tests directly via Swagger UI or use the cURL commands below.
 
+### Runtime config endpoint
+The frontend uses a small public endpoint to discover runtime values such as the S3 gateway region. You can inspect it with:
+
+```bash
+curl -X GET http://localhost:3000/api/v1/config
+```
+
+Expected response (200):
+
+```json
+{
+  "status": "success",
+  "message": "Runtime config",
+  "data": {
+    "s3Gateway": {
+      "region": "us-east-1",
+      "basePath": "/s3"
+    }
+  }
+}
+```
+
 ---
 
 ## 🔍 2. Testing Endpoints Catalog

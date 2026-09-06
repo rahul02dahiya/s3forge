@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useObjects, useGeneratePresignedUpload, useGeneratePresignedDownload, useDeleteObject } from '../../hooks/useObjects';
 import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../../lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -78,8 +79,24 @@ export function ObjectBrowser({ bucketName }: { bucketName: string }) {
 
       toast.success('File uploaded successfully');
       refetch();
+      // Invalidate cached queries immediately so list updates from backend
+      queryClient.invalidateQueries({ queryKey: ['objects', bucketName] });
       queryClient.invalidateQueries({ queryKey: ['buckets', bucketName, 'usage'] });
       queryClient.invalidateQueries({ queryKey: ['storage-usage'] });
+
+      // Trigger server-side usage recalculation for uploads (fire-and-forget).
+      apiClient.POST('/storage/buckets/{name}/usage/recalculate', {
+        params: { path: { name: bucketName } },
+      })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['buckets', bucketName, 'usage'] });
+          queryClient.invalidateQueries({ queryKey: ['storage-usage'] });
+        })
+        .catch((err) => {
+          // Non-fatal: log and continue. Server already has snapshot worker as fallback.
+          // eslint-disable-next-line no-console
+          console.warn('Usage recalculation request failed', err);
+        });
     } catch (error: any) {
       toast.error(error.message || 'Error uploading file');
     } finally {

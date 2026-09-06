@@ -888,6 +888,26 @@
           "meta"
         ]
       }
+      ,
+      "AppConfigResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "message": { "type": "string", "example": "Runtime config" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "s3Gateway": {
+                "type": "object",
+                "properties": {
+                  "region": { "type": "string", "example": "us-east-1" },
+                  "basePath": { "type": "string", "example": "/s3" }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "parameters": {}
   },
@@ -962,6 +982,22 @@
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "summary": "Get public runtime configuration (non-sensitive)",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "Public runtime config",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AppConfigResponse" }
+              }
+            }
           }
         }
       }
