@@ -50,12 +50,26 @@ export async function signOut() {
   return Promise.resolve();
 }
 
-export async function requestPasswordReset(_email: string) {
-  // Mock function as /auth/forgot-password is not in the OpenAPI schema yet
-  console.warn("Forgot password API not yet implemented on the backend");
-  return new Promise((resolve) => setTimeout(resolve, 1000));
+export async function requestPasswordReset(email: string) {
+  const { data, error } = await apiClient.POST("/auth/forgot-password", {
+    body: { email },
+  });
+
+  if (error) {
+    throw new Error((error as any)?.message || "Failed to request password reset");
+  }
+
+  return (data as any)?.data ?? null;
 }
 
-export async function resetPassword() {
-  return new Promise((resolve) => setTimeout(resolve, 1000));
+export async function resetPassword(token: string, newPassword: string) {
+  const { data, error } = await apiClient.POST("/auth/reset-password", {
+    body: { token, newPassword },
+  });
+
+  if (error) {
+    throw new Error((error as any)?.message || "Failed to reset password");
+  }
+
+  return (data as any)?.data ?? null;
 }
