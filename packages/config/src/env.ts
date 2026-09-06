@@ -30,6 +30,7 @@ function required(name: string): string {
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProduction = nodeEnv === 'production';
+const insecureDevCredentialEncryptionKey = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
 export const env = {
   nodeEnv,
@@ -39,6 +40,14 @@ export const env = {
   corsOrigin: process.env.CORS_ORIGIN || constants.SERVER.DEFAULT_CORS_ORIGIN,
 
   appUrl: process.env.APP_URL || constants.SERVER.DEFAULT_APP_URL,
+
+  s3Gateway: {
+    basePath: process.env.S3_GATEWAY_BASE_PATH || '/s3',
+    region: process.env.S3_GATEWAY_REGION || constants.STORAGE.DEFAULT_REGION,
+    credentialEncryptionKey: isProduction
+      ? required('S3FORGE_CREDENTIAL_ENCRYPTION_KEY')
+      : process.env.S3FORGE_CREDENTIAL_ENCRYPTION_KEY || insecureDevCredentialEncryptionKey,
+  },
 
   jwtSecret: isProduction
     ? required('JWT_SECRET')

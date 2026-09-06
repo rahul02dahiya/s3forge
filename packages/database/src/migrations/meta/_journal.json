@@ -29,6 +29,13 @@
       "when": 1786866000000,
       "tag": "0003_add_created_by_to_buckets",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786869600000,
+      "tag": "0004_add_encrypted_s3_secret",
+      "breakpoints": true
     }
   ]
 }

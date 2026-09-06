@@ -13,6 +13,8 @@ export const s3Credentials = pgTable('s3_credentials', {
 
   secretKeyHash: text('secret_key_hash').notNull(),
 
+  secretKeyEncrypted: text('secret_key_encrypted'),
+
   description: text('description'),
 
   isActive: boolean('is_active').default(true).notNull(),

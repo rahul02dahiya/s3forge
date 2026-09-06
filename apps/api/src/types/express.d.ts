@@ -18,6 +18,8 @@ declare global {
       user?: AuthenticatedUser;
       /** Organization ID associated with the current request */
       organizationId?: number;
+      /** S3 access key authenticated through the S3-compatible gateway */
+      s3AccessKey?: string;
     }
   }
 }

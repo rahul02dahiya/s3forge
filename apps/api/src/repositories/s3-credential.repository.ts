@@ -6,6 +6,7 @@ export interface CreateS3CredentialData {
   organizationId: number;
   accessKey: string;
   secretKeyHash: string;
+  secretKeyEncrypted?: string;
   description?: string;
 }
 
@@ -20,6 +21,7 @@ export class S3CredentialRepository {
         organizationId: data.organizationId,
         accessKey: data.accessKey,
         secretKeyHash: data.secretKeyHash,
+        secretKeyEncrypted: data.secretKeyEncrypted ?? null,
         description: data.description ?? null,
       })
       .returning();

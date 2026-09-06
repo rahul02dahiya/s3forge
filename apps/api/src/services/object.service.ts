@@ -2,6 +2,7 @@ import { bucketRepository } from '../repositories/bucket.repository.js';
 import { minioService } from '../lib/minio-client.js';
 import { minio } from '../config/minio.js';
 import { auditService } from './audit.service.js';
+import { usageService } from './usage.service.js';
 import { AppError } from '../lib/app-error.js';
 import { logger } from '../lib/logger.js';
 import { constants } from '@s3forge/config';
@@ -215,6 +216,12 @@ export class ObjectService {
       })
       .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
 
+    // Fire-and-forget: trigger an async usage recalculation so UI reflects deletion
+    // We intentionally don't await this to avoid slowing down the API response.
+    usageService.recalculateBucketUsage(bucket.name, organizationId).catch((err) => {
+      logger.warn({ err, bucket: bucket.name }, 'Failed to recalculate usage after object.delete');
+    });
+
     return true;
   }
 
@@ -248,6 +255,11 @@ export class ObjectService {
         metadata: { bucketName, objectCount: objectNames.length, objectNames },
       })
       .catch((err) => logger.warn({ err }, 'Failed to record audit log'));
+
+    // Fire-and-forget: trigger an async usage recalculation so UI reflects batch deletion
+    usageService.recalculateBucketUsage(bucket.name, organizationId).catch((err) => {
+      logger.warn({ err, bucket: bucket.name }, 'Failed to recalculate usage after object.batch_delete');
+    });
 
     return {
       bucketName,
