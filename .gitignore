@@ -152,3 +152,4 @@ Caddyfile
 
 # other
 temp/
+.vscode/

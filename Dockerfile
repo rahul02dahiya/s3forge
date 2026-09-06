@@ -15,6 +15,9 @@ COPY apps/api/package.json ./apps/api/
 # Install workspace dependencies
 RUN pnpm install --frozen-lockfile
 
+# Install curl for container runtime healthchecks
+RUN apk add --no-cache curl
+
 # Copy source code across packages
 COPY packages/config ./packages/config
 COPY packages/database ./packages/database

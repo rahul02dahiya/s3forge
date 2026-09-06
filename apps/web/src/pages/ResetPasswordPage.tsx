@@ -8,6 +8,7 @@ import { PasswordInput } from "../components/auth/PasswordInput";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { resetPassword } from "../lib/auth";
+import { useSearchParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 
 const resetPasswordSchema = z.object({
@@ -36,10 +37,16 @@ export function ResetPasswordPage() {
     },
   });
 
+  const [searchParams] = useSearchParams();
+
   async function onSubmit(_data: ResetPasswordFormValues) {
     setIsLoading(true);
     try {
-      await resetPassword(); // Simulation
+      const token = searchParams.get("token") || "";
+      if (!token) {
+        throw new Error("Missing reset token");
+      }
+      await resetPassword(token, _data.password);
       setIsSuccess(true);
     } catch (error) {
       // Handle error
