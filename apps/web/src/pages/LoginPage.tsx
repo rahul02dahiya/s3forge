@@ -30,6 +30,23 @@ export function LoginPage() {
   const location = useLocation();
   const { data: user, isLoading: authLoading, isError } = useAuth();
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
+
+  const rememberMe = watch("rememberMe");
+
   const from = (location.state as { from?: Location })?.from?.pathname || "/dashboard";
 
   if (authLoading) {
@@ -51,23 +68,6 @@ export function LoginPage() {
   if (!isError && user) {
     return <Navigate to={from} replace />;
   }
-  
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
-  });
-
-  const rememberMe = watch("rememberMe");
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
