@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
@@ -10,19 +10,31 @@ import { BucketDetailsPage } from './pages/BucketDetailsPage'
 import { CredentialsPage } from './pages/CredentialsPage'
 import { AuditLogsPage } from './pages/AuditLogsPage'
 import { Toaster } from './components/ui/sonner'
+import { useAuth } from './hooks/useAuth'
 import './App.css'
 
-function Home() {
-  return (
-    <main className="app-shell p-10 flex flex-col items-center justify-center min-h-screen text-center">
-      <h1 className="text-4xl font-bold mb-4">S3Forge</h1>
-      <p className="text-xl text-muted-foreground mb-8">A self-hosted S3-compatible storage platform.</p>
-      <div className="flex gap-4">
-        <a href="/login" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">Sign In</a>
-        <a href="/signup" className="px-4 py-2 border border-input bg-background rounded-md hover:bg-accent hover:text-accent-foreground">Sign Up</a>
+function AuthRedirect() {
+  const { data: user, isLoading, isError } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 01-2 2H2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 10h4m0 0h4m-4 0v4m0-4v-4" />
+          </svg>
+          <p className="text-muted-foreground">Loading S3Forge...</p>
+        </div>
       </div>
-    </main>
-  )
+    );
+  }
+
+  if (isError || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
 }
 
 function App() {
@@ -30,7 +42,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<AuthRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

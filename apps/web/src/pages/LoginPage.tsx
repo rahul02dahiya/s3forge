@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import { Label } from "../components/ui/label";
 import { Checkbox } from "../components/ui/checkbox";
 import { Separator } from "../components/ui/separator";
 import { signIn } from "../lib/auth";
+import { useAuth } from "../hooks/useAuth";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
@@ -26,6 +27,30 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { data: user, isLoading: authLoading, isError } = useAuth();
+
+  const from = (location.state as { from?: Location })?.from?.pathname || "/dashboard";
+
+  if (authLoading) {
+    return (
+      <AuthLayout title="Welcome back" description="Sign in to continue to S3Forge.">
+        <div className="flex h-[60vh] items-center justify-center">
+          <div className="animate-pulse flex flex-col items-center gap-4">
+            <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 01-2 2H2" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 10h4m0 0h4m-4 0v4m0-4v-4" />
+            </svg>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (!isError && user) {
+    return <Navigate to={from} replace />;
+  }
   
   const {
     register,
@@ -49,7 +74,7 @@ export function LoginPage() {
     try {
       await signIn({ email: data.email, password: data.password });
       toast.success("Successfully signed in");
-      navigate("/dashboard");
+      navigate(from, { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in");
     } finally {
